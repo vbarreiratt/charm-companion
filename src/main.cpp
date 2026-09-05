@@ -1,0 +1,15 @@
+#include <Arduino.h>
+#include "config/pin_config.h"
+
+void setup() {
+    Serial.begin(115200);
+    delay(1000);
+    Serial.println("Charm Companion starting...");
+    Serial.printf("Display: %d x %d\n", DISPLAY_WIDTH, DISPLAY_HEIGHT);
+
+    // TODO: Initialize shell, start main loop
+}
+
+void loop() {
+    delay(1000);
+}
