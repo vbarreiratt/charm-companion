@@ -7,6 +7,12 @@ void setup() {
     Serial.println("Charm Companion starting...");
     Serial.printf("Display: %d x %d\n", DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
+    if (!psramInit()) {
+        Serial.println("PSRAM init FAILED");
+    } else {
+        Serial.printf("PSRAM: %u / %u bytes free\n", ESP.getFreePsram(), ESP.getPsramSize());
+    }
+
     // TODO: Initialize shell, start main loop
 }
 
