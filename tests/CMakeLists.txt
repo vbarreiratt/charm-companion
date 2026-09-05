@@ -44,3 +44,15 @@ add_executable(test_personality_api
 target_link_libraries(test_personality_api gtest gtest_main)
 gtest_discover_tests(test_personality_api)
 
+add_executable(test_home_app
+    test_home_app.cpp
+    ../src/shell/event_bus.cpp
+    ../src/spicy/spicy.cpp
+    ../src/spicy/personality_api.cpp
+    ../src/apps/app_base.cpp
+    ../src/apps/home/home_app.cpp
+    ../src/apps/home/home_ui.cpp
+)
+target_link_libraries(test_home_app gtest gtest_main)
+gtest_discover_tests(test_home_app)
+
