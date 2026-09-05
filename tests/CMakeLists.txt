@@ -19,3 +19,10 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/../src
     ${CMAKE_CURRENT_SOURCE_DIR}/../config
 )
+
+add_executable(test_event_bus
+    test_event_bus.cpp
+    ../src/shell/event_bus.cpp
+)
+target_link_libraries(test_event_bus gtest)
+gtest_discover_tests(test_event_bus)
