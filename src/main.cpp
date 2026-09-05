@@ -7,6 +7,7 @@
 #include "shell/hal/power_hal.h"
 #include "apps/scenes/scene_registry.h"
 #include "apps/scenes/planet_scene.h"
+#include "apps/scenes/eye_scene.h"
 
 void setup() {
     Serial.begin(115200);
@@ -27,6 +28,7 @@ void setup() {
     Serial.println("All HALs initialized.");
 
     SceneRegistry::instance().register_scene("planet", []() { return new PlanetScene(); });
+    SceneRegistry::instance().register_scene("eye", []() { return new EyeScene(); });
 
     // TODO: Initialize shell, start main loop
 }
