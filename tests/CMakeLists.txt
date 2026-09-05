@@ -34,3 +34,13 @@ add_executable(test_personality_core
 )
 target_link_libraries(test_personality_core gtest gtest_main)
 gtest_discover_tests(test_personality_core)
+
+add_executable(test_personality_api
+    test_personality_api.cpp
+    ../src/shell/event_bus.cpp
+    ../src/spicy/spicy.cpp
+    ../src/spicy/personality_api.cpp
+)
+target_link_libraries(test_personality_api gtest gtest_main)
+gtest_discover_tests(test_personality_api)
+
