@@ -5,6 +5,8 @@
 #include "shell/hal/touch_hal.h"
 #include "shell/hal/imu_hal.h"
 #include "shell/hal/power_hal.h"
+#include "apps/scenes/scene_registry.h"
+#include "apps/scenes/planet_scene.h"
 
 void setup() {
     Serial.begin(115200);
@@ -23,6 +25,8 @@ void setup() {
     IMUHAL::instance().init();
     PowerHAL::instance().init();
     Serial.println("All HALs initialized.");
+
+    SceneRegistry::instance().register_scene("planet", []() { return new PlanetScene(); });
 
     // TODO: Initialize shell, start main loop
 }
