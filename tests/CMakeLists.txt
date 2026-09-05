@@ -26,3 +26,11 @@ add_executable(test_event_bus
 )
 target_link_libraries(test_event_bus gtest)
 gtest_discover_tests(test_event_bus)
+
+add_executable(test_personality_core
+    test_personality_core.cpp
+    ../src/shell/event_bus.cpp
+    ../src/spicy/spicy.cpp
+)
+target_link_libraries(test_personality_core gtest gtest_main)
+gtest_discover_tests(test_personality_core)
