@@ -56,3 +56,15 @@ add_executable(test_home_app
 target_link_libraries(test_home_app gtest gtest_main)
 gtest_discover_tests(test_home_app)
 
+add_executable(test_scenes_app
+    test_scenes_app.cpp
+    ../src/shell/event_bus.cpp
+    ../src/spicy/spicy.cpp
+    ../src/spicy/personality_api.cpp
+    ../src/apps/app_base.cpp
+    ../src/apps/scenes/scene_registry.cpp
+    ../src/apps/scenes/scenes_app.cpp
+)
+target_link_libraries(test_scenes_app gtest gtest_main)
+gtest_discover_tests(test_scenes_app)
+
