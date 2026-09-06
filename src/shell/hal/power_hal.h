@@ -4,6 +4,10 @@
 
 #include <cstdint>
 
+#if defined(ARDUINO)
+class XPowersAXP2101;
+#endif
+
 class PowerHAL {
 public:
     static PowerHAL& instance();
@@ -17,6 +21,10 @@ private:
 
     PowerHAL(const PowerHAL&) = delete;
     PowerHAL& operator=(const PowerHAL&) = delete;
+
+#if defined(ARDUINO)
+    XPowersAXP2101* pmu_ = nullptr;
+#endif
 };
 
 #endif
