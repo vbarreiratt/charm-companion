@@ -83,9 +83,22 @@ they can resolve, or a checkpoint flagging the task is running long.
 
 ## Visual-refinement missions
 
-*(v1 scope: this skill currently only covers the loop above. A mission
-that is primarily about visual/design refinement — not yet wired to a
-digital twin the user can watch live — should still use
-`render_reference.py` to check work, but expect the WASM digital twin
-described in `docs/superpowers/specs/2026-09-06-hardware-iteration-harness-design.md`
-to add a proper pre-hardware co-iteration loop here in a follow-up plan.)*
+When a mission is primarily about visual/design refinement, iterate on
+the digital twin *before* touching hardware:
+
+1. `tools/hw/webtwin/build.sh` (only needed after changing `src/` render
+   code or `twin_main.cpp`).
+2. From `tools/hw/webtwin/`, run `python3 -m http.server 8765` and open
+   `http://localhost:8765/shell.html` in a browser, then tell the user it's
+   ready to look at. (A bare `file://` open does NOT work — Chrome blocks
+   the WASM binary's fetch from a file://-origin page.)
+3. Iterate: edit `src/` render code → re-run `build.sh` → user refreshes
+   the page → look again. This is the same production C++ source the
+   firmware uses, so what the user approves here cannot drift from what
+   ships (unlike the TypeScript-reimplementation approach a prior project
+   tried and had trouble keeping in sync).
+4. Once the user approves the visual, capture it as the pixel-perfect
+   reference: `tools/hw/render_reference.py <target> --out <path>.png`
+   with whatever `--touch`/`--update-ms` reproduces the approved state.
+5. That PNG is now the reference for the autonomous hardware loop above —
+   proceed there, diffing the real board's camera capture against it.
