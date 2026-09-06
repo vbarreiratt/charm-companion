@@ -2,9 +2,7 @@
 #include "apps/home/home_app.h"
 #include "shell/event_bus.h"
 #include "shell/event_types.h"
-
-// Forward-declared Canvas pointer is passed as nullptr in tests
-class Canvas;
+#include "utils/canvas_wrapper.h"
 
 TEST(HomeAppTest, OnEnterDoesNotCrash) {
     HomeApp app;
@@ -55,9 +53,10 @@ TEST(HomeAppTest, OnMotionDecaysIntensity) {
 TEST(HomeAppTest, RenderDoesNotCrash) {
     HomeApp app;
     app.on_enter();
+    Canvas canvas(466, 466);
     for (int i = 0; i < 5; ++i) {
         app.update(16);
-        app.render(nullptr);
+        app.render(&canvas);
     }
 }
 

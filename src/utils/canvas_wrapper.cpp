@@ -24,17 +24,18 @@ Canvas::~Canvas() {
 }
 
 void Canvas::fill_screen(uint16_t color) {
+    if (!buffer_) return;
     size_t count = static_cast<size_t>(w_) * h_;
     for (size_t i = 0; i < count; ++i) buffer_[i] = color;
 }
 
 void Canvas::draw_pixel(int16_t x, int16_t y, uint16_t color) {
-    if (x < 0 || y < 0 || x >= w_ || y >= h_) return;
+    if (!buffer_ || x < 0 || y < 0 || x >= w_ || y >= h_) return;
     buffer_[static_cast<size_t>(y) * w_ + x] = color;
 }
 
 uint16_t Canvas::get_pixel(int16_t x, int16_t y) const {
-    if (x < 0 || y < 0 || x >= w_ || y >= h_) return 0;
+    if (!buffer_ || x < 0 || y < 0 || x >= w_ || y >= h_) return 0;
     return buffer_[static_cast<size_t>(y) * w_ + x];
 }
 

@@ -5,8 +5,7 @@
 #include "shell/event_bus.h"
 #include "shell/event_types.h"
 #include "spicy/personality_api.h"
-
-class Canvas;
+#include "utils/canvas_wrapper.h"
 
 class MockScene : public Scene {
 public:
@@ -110,7 +109,8 @@ TEST(ScenesAppTest, UpdateAndRenderDelegation) {
     app.update(16);
     EXPECT_EQ(mock->update_count, 1);
 
-    app.render(nullptr);
+    Canvas canvas(466, 466);
+    app.render(&canvas);
     EXPECT_EQ(mock->render_count, 1);
 
     TouchEvent te{10, 20, 100, 255};
@@ -135,7 +135,8 @@ TEST(ScenesAppTest, EmptyRegistryDoesNotCrash) {
     app.next_scene();
     app.prev_scene();
     app.update(16);
-    app.render(nullptr);
+    Canvas canvas(466, 466);
+    app.render(&canvas);
     app.on_exit();
 }
 

@@ -15,10 +15,12 @@ void setup() {
     Serial.printf("Display: %d x %d\n", DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
     if (!psramInit()) {
-        Serial.println("PSRAM init FAILED");
-    } else {
-        Serial.printf("PSRAM: %u / %u bytes free\n", ESP.getFreePsram(), ESP.getPsramSize());
+        Serial.println("PSRAM init FAILED! Halting.");
+        while (true) {
+            delay(1000);
+        }
     }
+    Serial.printf("PSRAM: %u / %u bytes free\n", ESP.getFreePsram(), ESP.getPsramSize());
 
     // Register scenes
     SceneRegistry::instance().register_scene("planet", []() { return new PlanetScene(); });
