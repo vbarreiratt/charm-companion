@@ -20,24 +20,77 @@
 // through unchanged; do not add axis-swap/invert logic without hardware
 // confirmation.
 //
-// IRQ/sleep investigation (2026-09-06): tried gating get_touch_point() on
-// TOUCH_INT_PIN via attachInterrupt(), plus a sleep()/reset() wake cycle,
-// modeled on waveshareteam/ESP32-S3-Touch-AMOLED-1.75C's reference examples.
-// That made things worse (interrupt never fired; sleep() crashed the I2C
-// bus with ESP_ERR_INVALID_STATE) because that repo vendors a DIFFERENT,
-// incompatible fork of SensorLib than the one actually pinned in this
-// project's platformio.ini (lewisxhe/SensorsLib.git@2b9e591f...). That
-// exact pinned version's own bundled example
-// (.pio/libdeps/waveshare-amoled-175c/SensorLib/examples/touch/
-// cst9217_get_point/cst9217_get_point.ino) uses plain unconditional polling
-// (touch.getTouchPoints() every 30ms, no interrupt at all) and explicitly
-// comments out sleep()/reset() with the warning "Unable to obtain
-// coordinates after turning on sleep" -- confirming unconditional polling
-// (as below) is this library version's correct usage, not a bug to fix.
-// The separate, still-unexplained symptom (touch reporting nothing for
-// 30+ seconds at a time, then recovering) predates today's changes and
-// remains open -- reverted to this known-if-imperfect baseline rather than
-// guessing further against the wrong reference.
+// Read-path rewrite (2026-09-06): SensorLib's TouchDrvCST92xx::getPoint()
+// (used previously) has no retry or recovery -- a single failed I2C
+// transaction permanently reports "no touch" until something unrelated
+// happens to unstick it. This was the root cause of touch going silent for
+// 30+ seconds at a time on real hardware, confirmed by comparing against
+// waveshareteam/esp32-badge's cached waveshare__esp_lcd_touch_cst9217
+// component (a proven-reliable ESP-IDF driver for this exact chip, from
+// the same board's official factory firmware): its read function retries
+// up to 5 times with delays between the register-address write and the
+// data read, and hardware-resets the chip if all retries fail. init()
+// still uses SensorLib's begin() (chip detection has never failed here);
+// only the per-tick data read is now a direct, from-scratch reimplementation
+// of that proven protocol via Wire, bypassing SensorLib's getPoint().
+
+namespace {
+constexpr uint8_t CST9217_I2C_ADDR = 0x5A;
+constexpr uint16_t CST9217_DATA_REG = 0xD000;
+constexpr uint8_t CST9217_ACK_VALUE = 0xAB;
+constexpr int CST9217_MAX_RETRIES = 5;
+
+#if defined(ARDUINO)
+// Reads `len` bytes from a 16-bit register address, retrying on I2C failure
+// and hardware-resetting the chip if every retry is exhausted -- matching
+// waveshare__esp_lcd_touch_cst9217's cst9217_read_reg().
+bool cst9217_read_reg(uint16_t reg, uint8_t* data, uint8_t len) {
+    for (int retry = 0; retry < CST9217_MAX_RETRIES; ++retry) {
+        Wire.beginTransmission(CST9217_I2C_ADDR);
+        Wire.write(static_cast<uint8_t>(reg >> 8));
+        Wire.write(static_cast<uint8_t>(reg & 0xFF));
+        if (Wire.endTransmission(true) != 0) {
+            delay(3);
+            continue;
+        }
+
+        delay(2);
+
+        uint8_t received = Wire.requestFrom(static_cast<uint8_t>(CST9217_I2C_ADDR), len);
+        if (received == len) {
+            for (uint8_t i = 0; i < len; ++i) {
+                data[i] = Wire.read();
+            }
+            return true;
+        }
+        delay(3);
+    }
+
+    Serial.println("[touch_hal] read failed after retries, resetting chip");
+    digitalWrite(TOUCH_RESET_PIN, LOW);
+    delay(10);
+    digitalWrite(TOUCH_RESET_PIN, HIGH);
+    delay(100);
+    return false;
+}
+#endif
+
+}  // namespace
+
+bool TouchHAL::parse_touch_data(const uint8_t data[10], uint16_t* x, uint16_t* y) {
+    if (data[6] != CST9217_ACK_VALUE) return false;
+
+    uint8_t points = data[5] & 0x7F;
+    if (points == 0) return false;
+
+    // Single-touch HAL: only the first reported point is used.
+    uint8_t status = data[0] & 0x0F;
+    if (status != 0x06) return false;
+
+    if (x) *x = static_cast<uint16_t>((data[1] << 4) | (data[3] >> 4));
+    if (y) *y = static_cast<uint16_t>((data[2] << 4) | (data[3] & 0x0F));
+    return true;
+}
 
 TouchHAL& TouchHAL::instance() {
     static TouchHAL inst;
@@ -47,9 +100,11 @@ TouchHAL& TouchHAL::instance() {
 bool TouchHAL::init() {
 #if defined(ARDUINO)
     Serial.println("TouchHAL::init() — CST9217 initialization");
+    pinMode(TOUCH_RESET_PIN, OUTPUT);
+    digitalWrite(TOUCH_RESET_PIN, HIGH);
     touch_ = new TouchDrvCST92xx();
     touch_->setPins(TOUCH_RESET_PIN, TOUCH_INT_PIN);
-    if (!touch_->begin(Wire, 0x5A, TOUCH_SDA_PIN, TOUCH_SCL_PIN)) {
+    if (!touch_->begin(Wire, CST9217_I2C_ADDR, TOUCH_SDA_PIN, TOUCH_SCL_PIN)) {
         Serial.println("TouchHAL: touch_->begin() failed");
         delete touch_;
         touch_ = nullptr;
@@ -65,14 +120,11 @@ bool TouchHAL::init() {
 bool TouchHAL::get_touch_point(uint16_t* x, uint16_t* y) {
 #if defined(ARDUINO)
     if (!touch_) return false;
-    int16_t xs[1];
-    int16_t ys[1];
-    // Requests a single point (this HAL's interface is single-touch).
-    uint8_t touched = touch_->getPoint(xs, ys, 1);
-    if (touched == 0) return false;
-    if (x) *x = static_cast<uint16_t>(xs[0]);
-    if (y) *y = static_cast<uint16_t>(ys[0]);
-    return true;
+    uint8_t data[10] = {0};
+    if (!cst9217_read_reg(CST9217_DATA_REG, data, sizeof(data))) {
+        return false;
+    }
+    return parse_touch_data(data, x, y);
 #else
     (void)x;
     (void)y;
