@@ -78,6 +78,14 @@ void handle_serial_command(const String& line) {
 
 void setup() {
     Serial.begin(115200);
+    // Root cause of "touch only works while a serial monitor is attached":
+    // HWCDC's default 100ms TX timeout (with up to 20 retries, ~2s total)
+    // makes every Serial.print() block for up to ~2s when nobody is
+    // reading the USB CDC port and its ring buffer fills up -- and
+    // poll_sensors() prints on every detected touch, stalling the whole
+    // main loop. Non-blocking: prints are dropped instead of stalling
+    // firmware behavior on whether a host happens to be listening.
+    Serial.setTxTimeoutMs(0);
     delay(1000);
     Serial.println("Charm Companion starting...");
     Serial.printf("Display: %d x %d\n", DISPLAY_WIDTH, DISPLAY_HEIGHT);
