@@ -54,6 +54,10 @@ TEST(EyeSceneTest, BlinkFullyClosesEyelid) {
     auto ctx = g_personality_api.get_context();
     scene.render(&canvas, ctx);
 
-    EXPECT_EQ(canvas.get_pixel(233, 233), COLOR_BG_BLACK);   // eyelid bar covers center
-    EXPECT_EQ(canvas.get_pixel(233, 150), COLOR_MONO_NEUTRAL); // sclera still visible above the bar
+    // These pixels differ between the open and closed states, so they actually
+    // discriminate the bug (unlike (233,233)/(233,150), which are the same
+    // color whether the eye is open or closed and would pass even if
+    // update() incorrectly reset back to the open state on this frame).
+    EXPECT_EQ(canvas.get_pixel(263, 233), COLOR_BG_BLACK);     // within the eyelid bar (would be iris color if open)
+    EXPECT_EQ(canvas.get_pixel(233, 263), COLOR_MONO_NEUTRAL); // below the bar, sclera (would be iris color if open)
 }
