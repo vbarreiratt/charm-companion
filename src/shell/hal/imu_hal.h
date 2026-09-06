@@ -2,6 +2,10 @@
 #ifndef SHELL_HAL_IMU_HAL_H
 #define SHELL_HAL_IMU_HAL_H
 
+#if defined(ARDUINO)
+class SensorQMI8658;
+#endif
+
 class IMUHAL {
 public:
     static IMUHAL& instance();
@@ -15,6 +19,10 @@ private:
 
     IMUHAL(const IMUHAL&) = delete;
     IMUHAL& operator=(const IMUHAL&) = delete;
+
+#if defined(ARDUINO)
+    SensorQMI8658* qmi_ = nullptr;
+#endif
 };
 
 #endif
