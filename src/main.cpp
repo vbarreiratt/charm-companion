@@ -22,6 +22,9 @@
 //   next            ScenesApp::next_scene() (no-op if current app isn't scenes)
 //   prev            ScenesApp::prev_scene()
 //   app <name>      Shell::instance().switch_app(name), e.g. "app scenes"
+//   swipe up        simulate an upward swipe (Home -> Scenes) via
+//                    Shell::debug_inject_touch(), same path real touch uses
+//   boot            simulate a BOOT-button press via Shell::handle_boot_press()
 void handle_serial_command(const String& line) {
     if (line.startsWith("touch ")) {
         int sx = line.indexOf(' ');
@@ -58,6 +61,16 @@ void handle_serial_command(const String& line) {
         String name = line.substring(4);
         Shell::instance().switch_app(name.c_str());
         Serial.printf("[cmd] switch_app(%s)\n", name.c_str());
+    } else if (line == "swipe up") {
+        Shell::instance().debug_inject_touch(233, 400, true);
+        Shell::instance().debug_inject_touch(233, 300, true);
+        Shell::instance().debug_inject_touch(0, 0, false);
+        Serial.printf("[cmd] injected swipe up; current app: %s\n",
+                       Shell::instance().get_current_app_name());
+    } else if (line == "boot") {
+        Shell::instance().handle_boot_press();
+        Serial.printf("[cmd] simulated BOOT press; current app: %s\n",
+                       Shell::instance().get_current_app_name());
     } else if (line.length() > 0) {
         Serial.printf("[cmd] unknown command: %s\n", line.c_str());
     }
