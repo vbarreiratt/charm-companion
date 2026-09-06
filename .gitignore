@@ -7,3 +7,6 @@ build/
 *.bin
 *.elf
 *.log
+
+tools/hw/render_reference_bin
+tools/hw/webtwin/dist/
