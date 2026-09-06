@@ -26,14 +26,21 @@ void setup() {
 
     // Initialize Shell (which initializes HALs, sets Spicy mood, and activates default app)
     if (!Shell::instance().init()) {
-        Serial.println("Shell init failed!");
-        return;
+        Serial.println("Shell init failed! Halting.");
+        while (true) {
+            delay(1000);
+        }
     }
 
     Serial.println("All systems initialized. Shell running.");
 }
 
 void loop() {
-    Shell::instance().tick(16);
-    delay(16);
+    static uint32_t last_time = 0;
+    uint32_t now = millis();
+    uint32_t dt = (last_time > 0) ? (now - last_time) : 16;
+    last_time = now;
+
+    Shell::instance().tick(dt);
+    delay(10); // yield
 }

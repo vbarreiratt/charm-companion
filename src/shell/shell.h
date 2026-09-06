@@ -15,9 +15,9 @@ public:
     bool init();
     void run();  // Main loop
     void tick(uint32_t dt); // Single step for testing/deterministic execution
-    void switch_app(App* app);
+    void switch_app(App* app, const char* name = nullptr);
     void switch_app(const char* app_name);
-    void switch_app(std::nullptr_t) { switch_app(static_cast<App*>(nullptr)); }
+    void switch_app(std::nullptr_t) { switch_app(static_cast<App*>(nullptr), nullptr); }
     
     App* get_current_app() const { return current_app; }
     

@@ -120,26 +120,24 @@ void Shell::tick(uint32_t dt) {
     render_and_flush();
 }
 
-void Shell::switch_app(App* app) {
+void Shell::switch_app(App* app, const char* name) {
     next_app = app;
+    next_app_name = name ? name : (app ? "custom" : "");
     app_transition_pending = true;
 }
 
 void Shell::switch_app(const char* app_name) {
     if (!app_name) {
-        next_app_name = nullptr;
-        switch_app(static_cast<App*>(nullptr));
+        switch_app(static_cast<App*>(nullptr), nullptr);
         return;
     }
 
     if (strcmp(app_name, "home") == 0) {
         static HomeApp home_app;
-        next_app_name = "home";
-        switch_app(&home_app);
+        switch_app(&home_app, "home");
     } else if (strcmp(app_name, "scenes") == 0) {
         static ScenesApp scenes_app;
-        next_app_name = "scenes";
-        switch_app(&scenes_app);
+        switch_app(&scenes_app, "scenes");
     } else {
 #if defined(ARDUINO)
         Serial.printf("Shell::switch_app: unknown app '%s'\n", app_name);
