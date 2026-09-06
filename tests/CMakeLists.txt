@@ -134,3 +134,15 @@ add_executable(test_planet_scene
 target_link_libraries(test_planet_scene gtest gtest_main)
 gtest_discover_tests(test_planet_scene)
 
+add_executable(test_eye_scene
+    test_eye_scene.cpp
+    ../src/shell/event_bus.cpp
+    ../src/spicy/spicy.cpp
+    ../src/spicy/personality_api.cpp
+    ../src/spicy/personality_nvs.cpp
+    ../src/apps/scenes/eye_scene.cpp
+    ../src/utils/canvas_wrapper.cpp
+)
+target_link_libraries(test_eye_scene gtest gtest_main)
+gtest_discover_tests(test_eye_scene)
+
