@@ -89,3 +89,10 @@ add_executable(test_shell_integration
 target_link_libraries(test_shell_integration gtest gtest_main)
 gtest_discover_tests(test_shell_integration)
 
+add_executable(test_canvas_wrapper
+    test_canvas_wrapper.cpp
+    ../src/utils/canvas_wrapper.cpp
+)
+target_link_libraries(test_canvas_wrapper gtest gtest_main)
+gtest_discover_tests(test_canvas_wrapper)
+
