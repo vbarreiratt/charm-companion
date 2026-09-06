@@ -1,13 +1,12 @@
 #include <Arduino.h>
 #include "config/pin_config.h"
 
-#include "shell/hal/display_hal.h"
-#include "shell/hal/touch_hal.h"
-#include "shell/hal/imu_hal.h"
-#include "shell/hal/power_hal.h"
+#include "shell/shell.h"
+#include "spicy/spicy.h"
 #include "apps/scenes/scene_registry.h"
 #include "apps/scenes/planet_scene.h"
 #include "apps/scenes/eye_scene.h"
+#include "apps/home/home_app.h"
 
 void setup() {
     Serial.begin(115200);
@@ -21,18 +20,20 @@ void setup() {
         Serial.printf("PSRAM: %u / %u bytes free\n", ESP.getFreePsram(), ESP.getPsramSize());
     }
 
-    DisplayHAL::instance().init();
-    TouchHAL::instance().init();
-    IMUHAL::instance().init();
-    PowerHAL::instance().init();
-    Serial.println("All HALs initialized.");
-
+    // Register scenes
     SceneRegistry::instance().register_scene("planet", []() { return new PlanetScene(); });
     SceneRegistry::instance().register_scene("eye", []() { return new EyeScene(); });
 
-    // TODO: Initialize shell, start main loop
+    // Initialize Shell (which initializes HALs, sets Spicy mood, and activates default app)
+    if (!Shell::instance().init()) {
+        Serial.println("Shell init failed!");
+        return;
+    }
+
+    Serial.println("All systems initialized. Shell running.");
 }
 
 void loop() {
-    delay(1000);
+    Shell::instance().tick(16);
+    delay(16);
 }

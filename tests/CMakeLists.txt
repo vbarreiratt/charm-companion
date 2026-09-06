@@ -68,3 +68,24 @@ add_executable(test_scenes_app
 target_link_libraries(test_scenes_app gtest gtest_main)
 gtest_discover_tests(test_scenes_app)
 
+add_executable(test_shell_integration
+    test_shell_integration.cpp
+    ../src/shell/event_bus.cpp
+    ../src/shell/shell.cpp
+    ../src/shell/hal/display_hal.cpp
+    ../src/shell/hal/touch_hal.cpp
+    ../src/shell/hal/imu_hal.cpp
+    ../src/shell/hal/power_hal.cpp
+    ../src/spicy/spicy.cpp
+    ../src/spicy/personality_api.cpp
+    ../src/apps/app_base.cpp
+    ../src/apps/home/home_app.cpp
+    ../src/apps/home/home_ui.cpp
+    ../src/apps/scenes/scene_registry.cpp
+    ../src/apps/scenes/scenes_app.cpp
+    ../src/apps/scenes/planet_scene.cpp
+    ../src/apps/scenes/eye_scene.cpp
+)
+target_link_libraries(test_shell_integration gtest gtest_main)
+gtest_discover_tests(test_shell_integration)
+
