@@ -23,6 +23,8 @@ bool PowerHAL::init() {
     pmu_ = new XPowersAXP2101();
     if (!pmu_->begin(Wire, 0x34, PMU_SDA_PIN, PMU_SCL_PIN)) {
         Serial.println("PowerHAL: pmu_->begin() failed");
+        delete pmu_;
+        pmu_ = nullptr;
         return false;
     }
     pmu_->enableBattDetection();

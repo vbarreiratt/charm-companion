@@ -59,7 +59,6 @@ bool Shell::init() {
 #else
         printf("TouchHAL init failed\n");
 #endif
-        return false;
     }
 
     if (!IMUHAL::instance().init()) {
@@ -68,7 +67,6 @@ bool Shell::init() {
 #else
         printf("IMUHAL init failed\n");
 #endif
-        return false;
     }
 
     if (!PowerHAL::instance().init()) {
@@ -77,7 +75,6 @@ bool Shell::init() {
 #else
         printf("PowerHAL init failed\n");
 #endif
-        return false;
     }
 
     g_personality_nvs.init();

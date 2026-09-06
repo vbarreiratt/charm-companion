@@ -32,6 +32,8 @@ bool TouchHAL::init() {
     touch_->setPins(TOUCH_RESET_PIN, TOUCH_INT_PIN);
     if (!touch_->begin(Wire, 0x5A, TOUCH_SDA_PIN, TOUCH_SCL_PIN)) {
         Serial.println("TouchHAL: touch_->begin() failed");
+        delete touch_;
+        touch_ = nullptr;
         return false;
     }
     return true;

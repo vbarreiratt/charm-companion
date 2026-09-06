@@ -23,6 +23,8 @@ bool IMUHAL::init() {
     qmi_ = new SensorQMI8658();
     if (!qmi_->begin(Wire, 0x6B, IMU_SDA_PIN, IMU_SCL_PIN)) {
         Serial.println("IMUHAL: qmi_->begin() failed");
+        delete qmi_;
+        qmi_ = nullptr;
         return false;
     }
     qmi_->configAccelerometer(SensorQMI8658::ACC_RANGE_4G, SensorQMI8658::ACC_ODR_1000Hz, SensorQMI8658::LPF_MODE_0);
