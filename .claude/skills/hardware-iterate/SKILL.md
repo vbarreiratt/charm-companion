@@ -15,6 +15,9 @@ docs/superpowers/specs/2026-09-06-hardware-iteration-harness-design.md).
 Setup: `pip install -r tools/hw/requirements.txt` (pyserial, opencv-python,
 numpy, Pillow, pytest). These modules are flat top-level imports (no
 package), so run scripts and tests with working directory at `tools/hw/`.
+Additionally, `tools/hw/webtwin/build.sh` requires the Emscripten toolchain:
+`brew install emscripten` (a Homebrew formula; no other setup needed beyond
+that).
 
 - `tools/hw/serial_console.py` — `connect()` for a persistent connection to
   the board's debug command console (`src/main.cpp`'s `handle_serial_command`:
@@ -51,6 +54,11 @@ package), so run scripts and tests with working directory at `tools/hw/`.
   are actually catchable.
 - `docs/hardware/camera-quirks.md` — check this before calling a
   reference/photo mismatch a code bug.
+- `tools/hw/webtwin/` — the WASM digital twin. `build.sh` compiles the
+  production render code (the real `src/` sources, not a reimplementation)
+  to `dist/twin.js`/`dist/twin.wasm`; `shell.html` is the browser page that
+  drives it. See the "Visual-refinement missions" section below for the
+  full iteration loop.
 
 ## The autonomous hardware loop
 
@@ -86,8 +94,13 @@ they can resolve, or a checkpoint flagging the task is running long.
 When a mission is primarily about visual/design refinement, iterate on
 the digital twin *before* touching hardware:
 
-1. `tools/hw/webtwin/build.sh` (only needed after changing `src/` render
-   code or `twin_main.cpp`).
+1. `tools/hw/webtwin/build.sh` — MUST be run at least once before
+   `shell.html` will work at all: `dist/` is gitignored, so on a fresh
+   clone (or if it was never built) there is no `dist/twin.js`/`twin.wasm`
+   yet, and `shell.html` hardcodes `<script src="dist/twin.js">` — skipping
+   this step produces a silently blank page, no error surfaced. After that
+   first build, it only needs to be re-run after changing `src/` render
+   code or `twin_main.cpp`.
 2. From `tools/hw/webtwin/`, run `python3 -m http.server 8765` and open
    `http://localhost:8765/shell.html` in a browser, then tell the user it's
    ready to look at. (A bare `file://` open does NOT work — Chrome blocks
@@ -95,10 +108,34 @@ the digital twin *before* touching hardware:
 3. Iterate: edit `src/` render code → re-run `build.sh` → user refreshes
    the page → look again. This is the same production C++ source the
    firmware uses, so what the user approves here cannot drift from what
-   ships (unlike the TypeScript-reimplementation approach a prior project
-   tried and had trouble keeping in sync).
+   ships *pixel-for-pixel, for a given state* (unlike the
+   TypeScript-reimplementation approach a prior project tried and had
+   trouble keeping in sync). This guarantee is about pixels, not animation
+   timing — see the caveat below.
 4. Once the user approves the visual, capture it as the pixel-perfect
-   reference: `tools/hw/render_reference.py <target> --out <path>.png`
-   with whatever `--touch`/`--update-ms` reproduces the approved state.
+   reference: `python3 tools/hw/render_reference.py <target> --out
+   <path>.png` with whatever `--touch`/`--update-ms` reproduces the
+   approved state.
 5. That PNG is now the reference for the autonomous hardware loop above —
    proceed there, diffing the real board's camera capture against it.
+
+**Caveat — pixels match, animation timing does not.** The twin matches the
+real board's pixels exactly for a given state, but its `update()` call
+cadence does not match the board's: the browser's `requestAnimationFrame`
+loop ticks roughly every 16ms, while the real display flush takes ~57-67ms
+per frame (`src/shell/hal/display_hal.cpp`), so the board calls `update(dt)`
+far less often per unit of wall-clock time. For an animation driven by
+*how many `update()` calls have happened* rather than by elapsed wall time,
+the twin and the board will visibly disagree mid-animation even though both
+run identical code. `home`'s breathing-pulse animation
+(`HomeUI::render_spicy_eyes` in `src/apps/home/home_ui.cpp`) is exactly
+this case: its phase comes from `frame_counter % 60` (`src/apps/home/home_app.cpp`),
+where `frame_counter` increments once per `update()` call, so the twin
+cycles it roughly once per second while the real board takes roughly 3.5
+seconds for the same 60 calls — an approved `home` screenshot can land on a
+different breathing-pulse phase than what the board shows after the same
+wall-clock time (or the same `--update-ms` value, which also steps in
+fixed 16ms chunks). `planet` and `eye` scenes are less affected since their
+timers accumulate real `dt` in milliseconds rather than counting frames,
+but that's not a blanket exemption — treat this as a `home`-specific issue
+to watch for, not proof that other scenes are immune.
