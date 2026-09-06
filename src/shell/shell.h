@@ -20,6 +20,7 @@ public:
     void switch_app(std::nullptr_t) { switch_app(static_cast<App*>(nullptr), nullptr); }
     
     App* get_current_app() const { return current_app; }
+    const char* get_current_app_name() const { return current_app_name; }
     
     // Allow tests or main loop to poll sensors explicitly
     void poll_sensors();

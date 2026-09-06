@@ -192,6 +192,9 @@ void Shell::poll_sensors() {
 
     uint16_t tx = 0, ty = 0;
     if (TouchHAL::instance().get_touch_point(&tx, &ty)) {
+#if defined(ARDUINO)
+        Serial.printf("[touch_hal] raw point x=%u y=%u\n", tx, ty);
+#endif
         Event e;
         e.type = EventType::TOUCH_EVENT;
         e.data.touch.x = tx;

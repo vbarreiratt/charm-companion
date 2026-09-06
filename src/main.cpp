@@ -2,11 +2,66 @@
 #include "config/pin_config.h"
 
 #include "shell/shell.h"
+#include "shell/event_bus.h"
+#include "shell/event_types.h"
 #include "spicy/spicy.h"
 #include "apps/scenes/scene_registry.h"
+#include "apps/scenes/scenes_app.h"
 #include "apps/scenes/planet_scene.h"
 #include "apps/scenes/eye_scene.h"
 #include "apps/home/home_app.h"
+#include <cstring>
+
+// Debug-only serial command console, for exercising touch/scene handling
+// without physical finger input. Not a substitute for physical touch
+// verification of TouchHAL/get_touch_point() itself — it publishes directly
+// to g_event_bus, bypassing the CST9217 driver entirely.
+//
+// Commands (newline-terminated over the USB CDC serial port):
+//   touch <x> <y>   publish a synthetic TOUCH_EVENT
+//   next            ScenesApp::next_scene() (no-op if current app isn't scenes)
+//   prev            ScenesApp::prev_scene()
+//   app <name>      Shell::instance().switch_app(name), e.g. "app scenes"
+void handle_serial_command(const String& line) {
+    if (line.startsWith("touch ")) {
+        int sx = line.indexOf(' ');
+        int sy = line.indexOf(' ', sx + 1);
+        if (sx < 0 || sy < 0) {
+            Serial.println("[cmd] usage: touch <x> <y>");
+            return;
+        }
+        uint16_t x = static_cast<uint16_t>(line.substring(sx + 1, sy).toInt());
+        uint16_t y = static_cast<uint16_t>(line.substring(sy + 1).toInt());
+        Event e;
+        e.type = EventType::TOUCH_EVENT;
+        e.data.touch = {x, y, 0, 255};
+        g_event_bus.publish(e);
+        Serial.printf("[cmd] injected touch x=%u y=%u\n", x, y);
+    } else if (line == "next" || line == "prev") {
+        // No RTTI on this build (-fno-rtti), so we can't dynamic_cast the
+        // current App* — use Shell's tracked app name to confirm it's safe
+        // to static_cast, matching how Shell::switch_app("scenes") tags it.
+        const char* name = Shell::instance().get_current_app_name();
+        if (!name || strcmp(name, "scenes") != 0) {
+            Serial.println("[cmd] current app is not ScenesApp — try 'app scenes' first");
+            return;
+        }
+        auto* scenes = static_cast<ScenesApp*>(Shell::instance().get_current_app());
+        if (line == "next") {
+            scenes->next_scene();
+        } else {
+            scenes->prev_scene();
+        }
+        auto* scene = scenes->get_current_scene();
+        Serial.printf("[cmd] scene now: %s\n", scene ? scene->name() : "(none)");
+    } else if (line.startsWith("app ")) {
+        String name = line.substring(4);
+        Shell::instance().switch_app(name.c_str());
+        Serial.printf("[cmd] switch_app(%s)\n", name.c_str());
+    } else if (line.length() > 0) {
+        Serial.printf("[cmd] unknown command: %s\n", line.c_str());
+    }
+}
 
 void setup() {
     Serial.begin(115200);
@@ -38,6 +93,14 @@ void setup() {
 }
 
 void loop() {
+    if (Serial.available()) {
+        String line = Serial.readStringUntil('\n');
+        line.trim();
+        if (line.length() > 0) {
+            handle_serial_command(line);
+        }
+    }
+
     static uint32_t last_time = 0;
     uint32_t now = millis();
     uint32_t dt = (last_time > 0) ? (now - last_time) : 16;
