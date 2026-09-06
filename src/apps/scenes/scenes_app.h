@@ -16,7 +16,8 @@ public:
     void on_motion(const MotionEvent& e) override;
     void update(uint32_t dt) override;
     void render(Canvas* canvas) override;
-    
+    bool handle_back() override;
+
     void next_scene();
     void prev_scene();
     

@@ -80,6 +80,14 @@ void ScenesApp::on_motion(const MotionEvent& e) {
     }
 }
 
+bool ScenesApp::handle_back() {
+    if (current_scene_index > 0) {
+        load_scene_at_index(current_scene_index - 1);
+        return true;
+    }
+    return false;
+}
+
 void ScenesApp::update(uint32_t dt) {
     if (current_scene) {
         current_scene->update(dt);

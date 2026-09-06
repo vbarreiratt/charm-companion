@@ -16,6 +16,12 @@ public:
     virtual void on_motion(const MotionEvent& e) = 0;
     virtual void update(uint32_t dt) = 0;
     virtual void render(Canvas* canvas) = 0;
+
+    // Physical back-button navigation. Return true if this app handled it
+    // internally (e.g. moved to a previous sub-state); false if there is
+    // nothing left to go back to, so the caller (Shell) should navigate
+    // to Home instead. Default: nothing to go back to.
+    virtual bool handle_back() { return false; }
     
     // Listener interface (receives events from EventBus)
     void on_event(const Event& e) override;

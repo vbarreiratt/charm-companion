@@ -151,6 +151,38 @@ TEST(ScenesAppTest, SubscribesAndUnsubscribesFromEventBus) {
     g_event_bus.publish(mood_event);
 }
 
+TEST(ScenesAppTest, HandleBackMovesToPreviousSceneAndReturnsTrue) {
+    auto& registry = SceneRegistry::instance();
+    registry.clear();
+    registry.register_scene("back_scene_0", []() { return new MockScene("back_scene_0"); });
+    registry.register_scene("back_scene_1", []() { return new MockScene("back_scene_1"); });
+
+    ScenesApp app;
+    app.on_enter();
+    app.next_scene();
+    EXPECT_EQ(app.get_current_scene_index(), 1);
+
+    EXPECT_TRUE(app.handle_back());
+    EXPECT_EQ(app.get_current_scene_index(), 0);
+
+    app.on_exit();
+}
+
+TEST(ScenesAppTest, HandleBackAtFirstSceneReturnsFalseAndStays) {
+    auto& registry = SceneRegistry::instance();
+    registry.clear();
+    registry.register_scene("only_back_scene", []() { return new MockScene("only_back_scene"); });
+
+    ScenesApp app;
+    app.on_enter();
+    EXPECT_EQ(app.get_current_scene_index(), 0);
+
+    EXPECT_FALSE(app.handle_back());
+    EXPECT_EQ(app.get_current_scene_index(), 0);
+
+    app.on_exit();
+}
+
 TEST(ScenesAppTest, ReceivesTouchAndMotionEventsPublishedOnGlobalBus) {
     // Regression: ScenesApp previously never subscribed to TOUCH_EVENT or
     // MOTION_EVENT, so Shell::poll_sensors()'s g_event_bus.publish() never
