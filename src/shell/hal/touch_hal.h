@@ -4,6 +4,10 @@
 
 #include <cstdint>
 
+#if defined(ARDUINO)
+class TouchDrvCST92xx;
+#endif
+
 class TouchHAL {
 public:
     static TouchHAL& instance();
@@ -17,6 +21,10 @@ private:
 
     TouchHAL(const TouchHAL&) = delete;
     TouchHAL& operator=(const TouchHAL&) = delete;
+
+#if defined(ARDUINO)
+    TouchDrvCST92xx* touch_ = nullptr;
+#endif
 };
 
 #endif
