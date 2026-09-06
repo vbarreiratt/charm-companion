@@ -3,6 +3,7 @@
 #include "shell/event_bus.h"
 #include "shell/event_types.h"
 #include "spicy/spicy.h"
+#include "spicy/personality_nvs.h"
 #include "apps/app_base.h"
 #include "config/pin_config.h"
 
@@ -38,6 +39,12 @@ public:
 };
 
 TEST(ShellIntegrationTest, ShellInitializes) {
+    // Asserts the boot-default mood, which is a precondition on the native
+    // NVS store being empty. Reset explicitly rather than relying on gtest
+    // registration order across the flat native test binary (other test
+    // files' calls to set_mood() also write to this shared global store).
+    g_personality_nvs.reset_for_testing();
+
     Shell& sh = Shell::instance();
     EXPECT_TRUE(sh.init());
     EXPECT_EQ(g_spicy.get_context().mood, Mood::CURIOUS);

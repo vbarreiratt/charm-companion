@@ -6,6 +6,7 @@
 #include "shell/hal/power_hal.h"
 #include "shell/event_types.h"
 #include "spicy/spicy.h"
+#include "spicy/personality_nvs.h"
 #include "apps/app_base.h"
 #include "apps/home/home_app.h"
 #include "apps/scenes/scenes_app.h"
@@ -79,7 +80,8 @@ bool Shell::init() {
         return false;
     }
 
-    g_spicy.set_mood(Mood::CURIOUS);
+    g_personality_nvs.init();
+    g_spicy.set_mood(g_personality_nvs.load_mood(Mood::CURIOUS));
 
     if (!current_app) {
         switch_app("home");

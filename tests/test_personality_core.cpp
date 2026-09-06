@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "spicy/spicy.h"
 #include "shell/event_bus.h"
+#include "spicy/personality_nvs.h"
 
 class MoodChangeListener : public Listener {
 public:
@@ -73,4 +74,13 @@ TEST(SpicyTest, TraitClampingPreventsUnderflow) {
     ASSERT_LE(ctx.traits.mischief, 100);
     ASSERT_GE(ctx.traits.mischief, 0);
     ASSERT_EQ(ctx.traits.mischief, 20);
+}
+
+TEST(SpicyTest, SetMoodPersistsToNVS) {
+    g_personality_nvs.reset_for_testing();
+
+    Spicy spicy;
+    spicy.set_mood(Mood::SCARED);
+
+    ASSERT_EQ(g_personality_nvs.load_mood(Mood::CURIOUS), Mood::SCARED);
 }

@@ -31,6 +31,7 @@ add_executable(test_personality_core
     test_personality_core.cpp
     ../src/shell/event_bus.cpp
     ../src/spicy/spicy.cpp
+    ../src/spicy/personality_nvs.cpp
 )
 target_link_libraries(test_personality_core gtest gtest_main)
 gtest_discover_tests(test_personality_core)
@@ -39,6 +40,7 @@ add_executable(test_personality_api
     test_personality_api.cpp
     ../src/shell/event_bus.cpp
     ../src/spicy/spicy.cpp
+    ../src/spicy/personality_nvs.cpp
     ../src/spicy/personality_api.cpp
 )
 target_link_libraries(test_personality_api gtest gtest_main)
@@ -48,6 +50,7 @@ add_executable(test_home_app
     test_home_app.cpp
     ../src/shell/event_bus.cpp
     ../src/spicy/spicy.cpp
+    ../src/spicy/personality_nvs.cpp
     ../src/spicy/personality_api.cpp
     ../src/apps/app_base.cpp
     ../src/apps/home/home_app.cpp
@@ -60,6 +63,7 @@ add_executable(test_scenes_app
     test_scenes_app.cpp
     ../src/shell/event_bus.cpp
     ../src/spicy/spicy.cpp
+    ../src/spicy/personality_nvs.cpp
     ../src/spicy/personality_api.cpp
     ../src/apps/app_base.cpp
     ../src/apps/scenes/scene_registry.cpp
@@ -78,6 +82,7 @@ add_executable(test_shell_integration
     ../src/shell/hal/imu_hal.cpp
     ../src/shell/hal/power_hal.cpp
     ../src/spicy/spicy.cpp
+    ../src/spicy/personality_nvs.cpp
     ../src/spicy/personality_api.cpp
     ../src/apps/app_base.cpp
     ../src/apps/home/home_app.cpp
@@ -96,4 +101,11 @@ add_executable(test_canvas_wrapper
 )
 target_link_libraries(test_canvas_wrapper gtest gtest_main)
 gtest_discover_tests(test_canvas_wrapper)
+
+add_executable(test_personality_nvs
+    test_personality_nvs.cpp
+    ../src/spicy/personality_nvs.cpp
+)
+target_link_libraries(test_personality_nvs gtest gtest_main)
+gtest_discover_tests(test_personality_nvs)
 

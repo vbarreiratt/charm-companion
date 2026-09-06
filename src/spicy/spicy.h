@@ -8,10 +8,9 @@ public:
     Spicy();
     ~Spicy();
 
-    // NOTE: set_mood() must NOT be called from within an on_event() callback
-    // in Phase 1. EventBus::publish() holds a std::mutex during listener callbacks,
-    // so calling set_mood() (which publishes MOOD_CHANGED) from inside an on_event()
-    // callback would result in a deadlock.
+    // set_mood() is safe to call from within an on_event() callback: EventBus::publish()
+    // snapshots its listener list under lock and releases the lock before invoking any
+    // listener, so a cascaded publish() from inside a callback does not deadlock.
     void set_mood(Mood m);
     PersonalityContext get_context() const;
 

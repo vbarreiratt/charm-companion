@@ -1,5 +1,6 @@
 #include "spicy.h"
 #include "shell/event_bus.h"
+#include "personality_nvs.h"
 #include "utils/color_utils.h"
 
 Spicy g_spicy;
@@ -18,10 +19,6 @@ Spicy::Spicy() {
 
 Spicy::~Spicy() = default;
 
-// NOTE: set_mood() must NOT be called from within an on_event() callback
-// in Phase 1. EventBus::publish() holds a std::mutex during listener callbacks,
-// so calling set_mood() (which publishes MOOD_CHANGED) from inside an on_event()
-// callback would result in a deadlock.
 void Spicy::set_mood(Mood m) {
     context.mood = m;
     apply_mood_modifiers(m);
@@ -32,6 +29,8 @@ void Spicy::set_mood(Mood m) {
     e.type = EventType::MOOD_CHANGED;
     e.data.mood.personality_context = &context;  // safe: synchronous dispatch, g_spicy is global
     g_event_bus.publish(e);
+
+    g_personality_nvs.save_mood(m);
 }
 
 PersonalityContext Spicy::get_context() const {
