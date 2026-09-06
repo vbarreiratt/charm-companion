@@ -22,13 +22,11 @@ public:
 
 private:
     static constexpr int MAX_EVENTS = 16;
-    static constexpr int MAX_LISTENERS_PER_TYPE = 10;
 
     std::vector<Listener*> listeners[MAX_EVENTS];
     // std::mutex works across host native tests and ESP-IDF/Arduino-ESP32.
-    // NOTE: publish() holds mutex while invoking listener callbacks.
-    // Re-entrant calls to publish() from within on_event() will cause deadlock.
-    // Safe for Phase 1 (synchronous, non-reentrant event dispatch).
+    // publish() snapshots listeners under lock and releases it before invocation,
+    // safely supporting re-entrant / cascaded event publishing.
     std::mutex mutex;
 };
 

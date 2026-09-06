@@ -69,6 +69,9 @@ AnimationStyle PersonalityAPI::get_animation_style(AnimationType type) const {
     } else if (type == AnimationType::CALM) {
         style.speed *= 0.7f;
         style.intensity = 100;
+    } else if (type == AnimationType::CONFUSED) {
+        style.speed *= 0.8f;
+        style.intensity = 150;
     }
 
     return style;

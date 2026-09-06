@@ -1,5 +1,6 @@
 #include "apps/scenes/planet_scene.h"
 #include "spicy/personality_api.h"
+#include <cmath>
 
 #if defined(ARDUINO)
 #include <Arduino.h>
@@ -44,7 +45,7 @@ void PlanetScene::update(uint32_t dt) {
     speed += touch_speed_boost;
     touch_speed_boost *= 0.95f;  // decay
     rotation_angle += speed * (dt / 1000.0f) * 360.0f;
-    if (rotation_angle >= 360.0f) rotation_angle -= 360.0f;
+    rotation_angle = fmodf(rotation_angle, 360.0f);
 }
 
 void PlanetScene::render(Canvas* canvas, const PersonalityContext& ctx) {

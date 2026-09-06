@@ -8,7 +8,7 @@
 #include <cstdio>
 #endif
 
-EyeScene::EyeScene() : blink_timer(0), blink_interval(3000), is_blinking(false), blink_duration(150) {}
+EyeScene::EyeScene() = default;
 
 void EyeScene::on_enter() {
 #if defined(ARDUINO)

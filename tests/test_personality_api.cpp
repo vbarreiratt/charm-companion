@@ -67,8 +67,8 @@ TEST(PersonalityAPITest, AnimationStyleExcitedAndCalm) {
     EXPECT_EQ(calm.intensity, 100);
 
     auto confused = api.get_animation_style(AnimationType::CONFUSED);
-    EXPECT_FLOAT_EQ(confused.speed, base_speed);
-    EXPECT_EQ(confused.intensity, api.get_context().emotional_state.playfulness);
+    EXPECT_FLOAT_EQ(confused.speed, base_speed * 0.8f);
+    EXPECT_EQ(confused.intensity, 150);
 }
 
 TEST(PersonalityAPITest, GlobalInstanceAndInteraction) {

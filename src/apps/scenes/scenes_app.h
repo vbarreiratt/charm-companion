@@ -25,6 +25,8 @@ public:
     int get_current_scene_index() const { return current_scene_index; }
     
 private:
+    void load_scene_at_index(int index);
+
     Scene* current_scene = nullptr;
     int current_scene_index = 0;
 };

@@ -22,12 +22,7 @@ ScenesApp::~ScenesApp() {
     }
 }
 
-void ScenesApp::on_enter() {
-#if defined(ARDUINO)
-    Serial.println("ScenesApp::on_enter()");
-#else
-    printf("ScenesApp::on_enter()\n");
-#endif
+void ScenesApp::load_scene_at_index(int index) {
     if (current_scene) {
         current_scene->on_exit();
         delete current_scene;
@@ -35,9 +30,9 @@ void ScenesApp::on_enter() {
     }
 
     auto& registry = SceneRegistry::instance();
-    if (registry.count() > 0) {
-        current_scene_index = 0;
-        const char* name = registry.scene_at(0);
+    if (index >= 0 && index < registry.count()) {
+        current_scene_index = index;
+        const char* name = registry.scene_at(index);
         if (name) {
             current_scene = registry.load_scene(name);
             if (current_scene) {
@@ -45,6 +40,15 @@ void ScenesApp::on_enter() {
             }
         }
     }
+}
+
+void ScenesApp::on_enter() {
+#if defined(ARDUINO)
+    Serial.println("ScenesApp::on_enter()");
+#else
+    printf("ScenesApp::on_enter()\n");
+#endif
+    load_scene_at_index(0);
 }
 
 void ScenesApp::on_exit() {
@@ -88,41 +92,13 @@ void ScenesApp::render(Canvas* canvas) {
 void ScenesApp::next_scene() {
     auto& registry = SceneRegistry::instance();
     if (registry.count() > 0) {
-        current_scene_index = (current_scene_index + 1) % registry.count();
-        
-        if (current_scene) {
-            current_scene->on_exit();
-            delete current_scene;
-            current_scene = nullptr;
-        }
-        
-        const char* name = registry.scene_at(current_scene_index);
-        if (name) {
-            current_scene = registry.load_scene(name);
-            if (current_scene) {
-                current_scene->on_enter();
-            }
-        }
+        load_scene_at_index((current_scene_index + 1) % registry.count());
     }
 }
 
 void ScenesApp::prev_scene() {
     auto& registry = SceneRegistry::instance();
     if (registry.count() > 0) {
-        current_scene_index = (current_scene_index - 1 + registry.count()) % registry.count();
-        
-        if (current_scene) {
-            current_scene->on_exit();
-            delete current_scene;
-            current_scene = nullptr;
-        }
-        
-        const char* name = registry.scene_at(current_scene_index);
-        if (name) {
-            current_scene = registry.load_scene(name);
-            if (current_scene) {
-                current_scene->on_enter();
-            }
-        }
+        load_scene_at_index((current_scene_index - 1 + registry.count()) % registry.count());
     }
 }

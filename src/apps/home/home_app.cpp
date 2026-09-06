@@ -1,7 +1,6 @@
 // src/apps/home/home_app.cpp
 #include "apps/home/home_app.h"
 #include "spicy/personality_api.h"
-#include "shell/event_bus.h"
 
 #if defined(ARDUINO)
 #include <Arduino.h>

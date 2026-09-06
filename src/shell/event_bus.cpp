@@ -46,12 +46,13 @@ void EventBus::publish(const Event& event) {
         return;
     }
 
-    std::lock_guard<std::mutex> lock(mutex);
-    // NOTE: publish() holds mutex while invoking listener callbacks.
-    // Re-entrant calls to publish() from within on_event() will cause deadlock.
-    // Safe for Phase 1 (synchronous, non-reentrant event dispatch).
-    auto& list = listeners[idx];
-    for (auto* listener : list) {
+    std::vector<Listener*> listeners_copy;
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        listeners_copy = listeners[idx];
+    }
+
+    for (auto* listener : listeners_copy) {
         if (listener) {
             listener->on_event(event);
         }

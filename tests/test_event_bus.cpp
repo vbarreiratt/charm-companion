@@ -56,6 +56,43 @@ TEST(EventBusTest, Unsubscribe) {
     ASSERT_EQ(listener.call_count, 0);
 }
 
+class CascadingListener : public Listener {
+public:
+    EventBus& bus;
+    EventType trigger_type;
+    EventType cascade_type;
+    int call_count = 0;
+
+    CascadingListener(EventBus& b, EventType trigger, EventType cascade)
+        : bus(b), trigger_type(trigger), cascade_type(cascade) {}
+
+    void on_event(const Event& e) override {
+        call_count++;
+        if (e.type == trigger_type) {
+            Event cascaded{};
+            cascaded.type = cascade_type;
+            bus.publish(cascaded);
+        }
+    }
+};
+
+TEST(EventBusTest, CascadedPublishDuringCallback) {
+    EventBus bus;
+    CascadingListener l1(bus, EventType::TOUCH_EVENT, EventType::MOOD_CHANGED);
+    MockListener l2;
+
+    bus.subscribe(EventType::TOUCH_EVENT, &l1);
+    bus.subscribe(EventType::MOOD_CHANGED, &l2);
+
+    Event initial{};
+    initial.type = EventType::TOUCH_EVENT;
+    bus.publish(initial);
+
+    EXPECT_EQ(l1.call_count, 1);
+    EXPECT_EQ(l2.call_count, 1);
+    EXPECT_EQ(l2.last_event.type, EventType::MOOD_CHANGED);
+}
+
 #if defined(ARDUINO)
 void setup() {
     ::testing::InitGoogleTest();
