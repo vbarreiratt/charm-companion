@@ -55,9 +55,22 @@ add_executable(test_home_app
     ../src/apps/app_base.cpp
     ../src/apps/home/home_app.cpp
     ../src/apps/home/home_ui.cpp
+    ../src/utils/canvas_wrapper.cpp
 )
 target_link_libraries(test_home_app gtest gtest_main)
 gtest_discover_tests(test_home_app)
+
+add_executable(test_home_ui
+    test_home_ui.cpp
+    ../src/shell/event_bus.cpp
+    ../src/spicy/spicy.cpp
+    ../src/spicy/personality_api.cpp
+    ../src/spicy/personality_nvs.cpp
+    ../src/apps/home/home_ui.cpp
+    ../src/utils/canvas_wrapper.cpp
+)
+target_link_libraries(test_home_ui gtest gtest_main)
+gtest_discover_tests(test_home_ui)
 
 add_executable(test_scenes_app
     test_scenes_app.cpp
