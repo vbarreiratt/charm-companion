@@ -2,16 +2,16 @@
 #define SHELL_SHELL_H
 
 #include "shell/event_bus.h"
+#include "utils/canvas_wrapper.h"
 #include <cstdint>
 #include <cstddef>
 
 class App;
-class Canvas;
 
 class Shell {
 public:
     static Shell& instance();
-    
+
     bool init();
     void run();  // Main loop
     void tick(uint32_t dt); // Single step for testing/deterministic execution
@@ -25,7 +25,7 @@ public:
     void poll_sensors();
 
 private:
-    Shell() = default;
+    Shell();
     ~Shell();
     
     Shell(const Shell&) = delete;
@@ -36,7 +36,8 @@ private:
     bool app_transition_pending = false;
     const char* current_app_name = nullptr;
     const char* next_app_name = nullptr;
-    
+    Canvas screen_canvas;
+
     void update_active_app(uint32_t dt);
     void render_and_flush();
     void handle_app_transition();

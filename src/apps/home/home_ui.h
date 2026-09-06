@@ -3,7 +3,7 @@
 
 #include "spicy/personality_types.h"
 
-class Canvas;
+#include "utils/canvas_wrapper.h"
 
 class HomeUI {
 public:

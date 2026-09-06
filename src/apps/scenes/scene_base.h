@@ -5,7 +5,7 @@
 #include "shell/event_types.h"
 #include "spicy/personality_types.h"
 
-class Canvas;
+#include "utils/canvas_wrapper.h"
 
 class Scene {
 public:

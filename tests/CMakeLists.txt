@@ -70,6 +70,7 @@ gtest_discover_tests(test_scenes_app)
 
 add_executable(test_shell_integration
     test_shell_integration.cpp
+    ../src/utils/canvas_wrapper.cpp
     ../src/shell/event_bus.cpp
     ../src/shell/shell.cpp
     ../src/shell/hal/display_hal.cpp

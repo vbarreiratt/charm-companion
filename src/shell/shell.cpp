@@ -1,4 +1,5 @@
 #include "shell/shell.h"
+#include "config/pin_config.h"
 #include "shell/hal/display_hal.h"
 #include "shell/hal/touch_hal.h"
 #include "shell/hal/imu_hal.h"
@@ -24,6 +25,8 @@ Shell& Shell::instance() {
     static Shell sh;
     return sh;
 }
+
+Shell::Shell() : screen_canvas(DISPLAY_WIDTH, DISPLAY_HEIGHT) {}
 
 Shell::~Shell() {
     if (current_app) {
@@ -208,7 +211,7 @@ void Shell::update_active_app(uint32_t dt) {
 
 void Shell::render_and_flush() {
     if (current_app) {
-        current_app->render(nullptr);
-        DisplayHAL::instance().flush(nullptr);
+        current_app->render(&screen_canvas);
+        DisplayHAL::instance().flush(reinterpret_cast<uint8_t*>(screen_canvas.get_buffer()));
     }
 }

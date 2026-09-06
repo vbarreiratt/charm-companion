@@ -4,6 +4,7 @@
 #include "shell/event_types.h"
 #include "spicy/spicy.h"
 #include "apps/app_base.h"
+#include "config/pin_config.h"
 
 class MockTestApp : public App {
 public:
@@ -14,13 +15,14 @@ public:
     int touch_count = 0;
     int motion_count = 0;
     int render_count = 0;
+    Canvas* last_canvas = nullptr;
 
     void on_enter() override { enter_count++; }
     void on_exit() override { exit_count++; }
     void on_touch(const TouchEvent& e) override { (void)e; touch_count++; }
     void on_motion(const MotionEvent& e) override { (void)e; motion_count++; }
     void update(uint32_t dt) override { update_count++; last_dt = dt; }
-    void render(Canvas* canvas) override { (void)canvas; render_count++; }
+    void render(Canvas* canvas) override { last_canvas = canvas; render_count++; }
 };
 
 class CountingMotionListener : public Listener {
@@ -98,4 +100,19 @@ TEST(ShellIntegrationTest, TickUpdatesActiveApp) {
     sh.switch_app(nullptr);
     sh.tick(0);
     EXPECT_EQ(sh.get_current_app(), nullptr);
+}
+
+TEST(ShellIntegrationTest, RenderPassesRealNonNullCanvas) {
+    Shell& sh = Shell::instance();
+    MockTestApp app;
+
+    sh.switch_app(&app);
+    sh.tick(16);
+
+    ASSERT_NE(app.last_canvas, nullptr);
+    EXPECT_EQ(app.last_canvas->width(), DISPLAY_WIDTH);
+    EXPECT_EQ(app.last_canvas->height(), DISPLAY_HEIGHT);
+
+    sh.switch_app(nullptr);
+    sh.tick(0);
 }

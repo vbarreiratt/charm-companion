@@ -4,7 +4,7 @@
 #include "shell/event_types.h"
 #include "shell/event_bus.h"
 
-class Canvas;  // Forward declare (display driver provides this)
+#include "utils/canvas_wrapper.h"
 
 class App : public Listener {
 public:
