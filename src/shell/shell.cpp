@@ -4,6 +4,7 @@
 #include "shell/hal/touch_hal.h"
 #include "shell/hal/imu_hal.h"
 #include "shell/hal/power_hal.h"
+#include "shell/hal/button_hal.h"
 #include "shell/event_types.h"
 #include "spicy/spicy.h"
 #include "spicy/personality_nvs.h"
@@ -74,6 +75,14 @@ bool Shell::init() {
         Serial.println("PowerHAL init failed");
 #else
         printf("PowerHAL init failed\n");
+#endif
+    }
+
+    if (!ButtonHAL::instance().init()) {
+#if defined(ARDUINO)
+        Serial.println("ButtonHAL init failed");
+#else
+        printf("ButtonHAL init failed\n");
 #endif
     }
 
@@ -191,18 +200,47 @@ void Shell::poll_sensors() {
     }
 
     uint16_t tx = 0, ty = 0;
-    if (TouchHAL::instance().get_touch_point(&tx, &ty)) {
+    bool touched = TouchHAL::instance().get_touch_point(&tx, &ty);
 #if defined(ARDUINO)
+    if (touched) {
         Serial.printf("[touch_hal] raw point x=%u y=%u\n", tx, ty);
+    }
 #endif
+    process_touch(touched, tx, ty);
+
+    if (ButtonHAL::instance().was_pressed()) {
+        handle_boot_press();
+    }
+}
+
+void Shell::process_touch(bool touched, uint16_t x, uint16_t y) {
+    if (touched) {
         Event e;
         e.type = EventType::TOUCH_EVENT;
-        e.data.touch.x = tx;
-        e.data.touch.y = ty;
+        e.data.touch.x = x;
+        e.data.touch.y = y;
         e.data.touch.duration_ms = 0;
         e.data.touch.intensity = 100;
         g_event_bus.publish(e);
     }
+
+    SwipeDirection swipe = swipe_detector.feed(touched, x, y);
+    if (swipe == SwipeDirection::UP && current_app_name && strcmp(current_app_name, "home") == 0) {
+        switch_app("scenes");
+    }
+}
+
+void Shell::handle_boot_press() {
+    if (current_app && current_app->handle_back()) {
+        return;
+    }
+    if (current_app_name && strcmp(current_app_name, "home") != 0) {
+        switch_app("home");
+    }
+}
+
+void Shell::debug_inject_touch(uint16_t x, uint16_t y, bool touched) {
+    process_touch(touched, x, y);
 }
 
 void Shell::update_active_app(uint32_t dt) {

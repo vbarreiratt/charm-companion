@@ -17,6 +17,8 @@ public:
     int motion_count = 0;
     int render_count = 0;
     Canvas* last_canvas = nullptr;
+    int handle_back_calls = 0;
+    bool handle_back_return = false;
 
     void on_enter() override { enter_count++; }
     void on_exit() override { exit_count++; }
@@ -24,6 +26,7 @@ public:
     void on_motion(const MotionEvent& e) override { (void)e; motion_count++; }
     void update(uint32_t dt) override { update_count++; last_dt = dt; }
     void render(Canvas* canvas) override { last_canvas = canvas; render_count++; }
+    bool handle_back() override { handle_back_calls++; return handle_back_return; }
 };
 
 class CountingMotionListener : public Listener {
@@ -107,6 +110,84 @@ TEST(ShellIntegrationTest, TickUpdatesActiveApp) {
     sh.switch_app(nullptr);
     sh.tick(0);
     EXPECT_EQ(sh.get_current_app(), nullptr);
+}
+
+TEST(ShellIntegrationTest, HandleBootPressCallsAppHandleBackFirst) {
+    Shell& sh = Shell::instance();
+    MockTestApp app;
+    app.handle_back_return = true;
+
+    sh.switch_app(&app, "custom");
+    sh.tick(16);
+
+    sh.handle_boot_press();
+    EXPECT_EQ(app.handle_back_calls, 1);
+    EXPECT_EQ(sh.get_current_app(), &app);  // stayed: handle_back said it handled it
+
+    sh.switch_app(nullptr);
+    sh.tick(0);
+}
+
+TEST(ShellIntegrationTest, HandleBootPressSwitchesToHomeWhenAppCannotGoBack) {
+    Shell& sh = Shell::instance();
+    MockTestApp app;
+    app.handle_back_return = false;
+
+    sh.switch_app(&app, "not_home");
+    sh.tick(16);
+
+    sh.handle_boot_press();
+    sh.tick(16);  // apply the pending "home" transition
+    EXPECT_STREQ(sh.get_current_app_name(), "home");
+
+    sh.switch_app(nullptr);
+    sh.tick(0);
+}
+
+TEST(ShellIntegrationTest, HandleBootPressIsNoOpWhenAlreadyHome) {
+    Shell& sh = Shell::instance();
+    sh.switch_app("home");
+    sh.tick(16);
+    ASSERT_STREQ(sh.get_current_app_name(), "home");
+
+    sh.handle_boot_press();
+    sh.tick(16);
+    EXPECT_STREQ(sh.get_current_app_name(), "home");
+}
+
+TEST(ShellIntegrationTest, SwipeUpOnHomeSwitchesToScenes) {
+    Shell& sh = Shell::instance();
+    sh.switch_app("home");
+    sh.tick(16);
+    ASSERT_STREQ(sh.get_current_app_name(), "home");
+
+    sh.debug_inject_touch(233, 400, true);
+    sh.debug_inject_touch(233, 300, true);
+    sh.debug_inject_touch(0, 0, false);  // release -> completes an UP swipe
+
+    sh.tick(16);
+    EXPECT_STREQ(sh.get_current_app_name(), "scenes");
+
+    sh.switch_app(nullptr);
+    sh.tick(0);
+}
+
+TEST(ShellIntegrationTest, SwipeUpIsIgnoredWhenNotOnHome) {
+    Shell& sh = Shell::instance();
+    MockTestApp app;
+
+    sh.switch_app(&app, "not_home");
+    sh.tick(16);
+
+    sh.debug_inject_touch(233, 400, true);
+    sh.debug_inject_touch(233, 300, true);
+    sh.debug_inject_touch(0, 0, false);
+
+    sh.tick(16);
+    EXPECT_EQ(sh.get_current_app(), &app);  // unchanged
+
+    sh.switch_app(nullptr);
+    sh.tick(0);
 }
 
 TEST(ShellIntegrationTest, RenderPassesRealNonNullCanvas) {
