@@ -41,14 +41,19 @@ void EyeScene::on_motion(const MotionEvent& e) {
 }
 
 void EyeScene::update(uint32_t dt) {
-    blink_timer += dt;
-    if (blink_timer >= blink_interval && !is_blinking) {
-        is_blinking = true;
-        blink_timer = 0;
-    }
-    if (is_blinking && blink_timer >= blink_duration) {
-        is_blinking = false;
-        blink_timer = 0;
+    if (is_blinking) {
+        if (blink_timer >= blink_duration) {
+            is_blinking = false;
+            blink_timer = 0;
+        } else {
+            blink_timer += dt;
+        }
+    } else {
+        blink_timer += dt;
+        if (blink_timer >= blink_interval) {
+            is_blinking = true;
+            blink_timer = 0;
+        }
     }
 }
 

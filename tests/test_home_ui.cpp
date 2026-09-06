@@ -7,6 +7,7 @@
 TEST(HomeUITest, RenderHomeScreenFillsBackground) {
     HomeUI ui;
     Canvas canvas(466, 466);
+    canvas.fill_screen(COLOR_ACCENT_RED);  // sentinel; render() must overwrite it
     auto ctx = g_personality_api.get_context();
 
     ui.render_home_screen(&canvas, ctx, 0.0f, 0);

@@ -42,3 +42,18 @@ TEST(EyeSceneTest, MidBlinkShrinksIris) {
     // showed iris color when fully open now shows sclera instead.
     EXPECT_EQ(canvas.get_pixel(263, 233), COLOR_MONO_NEUTRAL);
 }
+
+TEST(EyeSceneTest, BlinkFullyClosesEyelid) {
+    EyeScene scene;
+    scene.on_enter();
+    TouchEvent te{0, 0, 0, 0};
+    scene.on_touch(te);
+    for (int i = 0; i < 10; ++i) scene.update(16);  // past blink_duration (150ms)
+
+    Canvas canvas(466, 466);
+    auto ctx = g_personality_api.get_context();
+    scene.render(&canvas, ctx);
+
+    EXPECT_EQ(canvas.get_pixel(233, 233), COLOR_BG_BLACK);   // eyelid bar covers center
+    EXPECT_EQ(canvas.get_pixel(233, 150), COLOR_MONO_NEUTRAL); // sclera still visible above the bar
+}

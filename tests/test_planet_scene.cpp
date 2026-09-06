@@ -2,11 +2,13 @@
 #include "apps/scenes/planet_scene.h"
 #include "spicy/personality_api.h"
 #include "utils/canvas_wrapper.h"
+#include "utils/color_utils.h"
 
 TEST(PlanetSceneTest, RenderDrawsPlanetBodyAtCenter) {
     PlanetScene scene;
     scene.on_enter();
     Canvas canvas(466, 466);
+    canvas.fill_screen(COLOR_ACCENT_RED);  // sentinel; render() must overwrite it
     auto ctx = g_personality_api.get_context();
 
     scene.render(&canvas, ctx);
