@@ -10,10 +10,14 @@
 
 HomeApp::HomeApp() : ui() {
     subscribe_to(EventType::MOOD_CHANGED);
+    subscribe_to(EventType::TOUCH_EVENT);
+    subscribe_to(EventType::MOTION_EVENT);
 }
 
 HomeApp::~HomeApp() {
     unsubscribe_from(EventType::MOOD_CHANGED);
+    unsubscribe_from(EventType::TOUCH_EVENT);
+    unsubscribe_from(EventType::MOTION_EVENT);
 }
 
 void HomeApp::on_enter() {
@@ -35,6 +39,7 @@ void HomeApp::on_exit() {
 
 void HomeApp::on_touch(const TouchEvent& e) {
     // TODO: Handle mood selector tap, app launcher tap
+    touch_count++;
 #if defined(ARDUINO)
     Serial.printf("HomeApp::on_touch(x=%u, y=%u)\n", e.x, e.y);
 #else

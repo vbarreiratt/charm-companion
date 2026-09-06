@@ -150,3 +150,31 @@ TEST(ScenesAppTest, SubscribesAndUnsubscribesFromEventBus) {
     mood_event.data.mood.personality_context = nullptr;
     g_event_bus.publish(mood_event);
 }
+
+TEST(ScenesAppTest, ReceivesTouchAndMotionEventsPublishedOnGlobalBus) {
+    // Regression: ScenesApp previously never subscribed to TOUCH_EVENT or
+    // MOTION_EVENT, so Shell::poll_sensors()'s g_event_bus.publish() never
+    // reached the active scene in production.
+    auto& registry = SceneRegistry::instance();
+    registry.clear();
+    registry.register_scene("bus_mock", []() { return new MockScene("bus_mock"); });
+
+    ScenesApp app;
+    app.on_enter();
+    auto* mock = dynamic_cast<MockScene*>(app.get_current_scene());
+    ASSERT_NE(mock, nullptr);
+
+    Event touch_event;
+    touch_event.type = EventType::TOUCH_EVENT;
+    touch_event.data.touch = {10, 20, 100, 255};
+    g_event_bus.publish(touch_event);
+    EXPECT_EQ(mock->touch_count, 1);
+
+    Event motion_event;
+    motion_event.type = EventType::MOTION_EVENT;
+    motion_event.data.motion = {0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0};
+    g_event_bus.publish(motion_event);
+    EXPECT_EQ(mock->motion_count, 1);
+
+    app.on_exit();
+}

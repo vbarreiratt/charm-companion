@@ -87,3 +87,55 @@ TEST(HomeAppTest, SubscribesAndUnsubscribesFromEventBus) {
     mood_event.data.mood.personality_context = nullptr;
     g_event_bus.publish(mood_event);
 }
+
+TEST(HomeAppTest, ReceivesTouchEventPublishedOnGlobalBus) {
+    // Regression: HomeApp previously never subscribed to TOUCH_EVENT, so
+    // Shell::poll_sensors()'s g_event_bus.publish() never reached on_touch()
+    // in production, regardless of real touch hardware.
+    HomeApp app;
+
+    Event event;
+    event.type = EventType::TOUCH_EVENT;
+    event.data.touch.x = 100;
+    event.data.touch.y = 200;
+    event.data.touch.duration_ms = 50;
+    event.data.touch.intensity = 128;
+    g_event_bus.publish(event);
+
+    EXPECT_EQ(app.get_touch_count(), 1);
+}
+
+TEST(HomeAppTest, ReceivesMotionEventPublishedOnGlobalBus) {
+    // Same regression as above, for MOTION_EVENT.
+    HomeApp app;
+
+    Event event;
+    event.type = EventType::MOTION_EVENT;
+    event.data.motion.intensity = 0.75f;
+    event.data.motion.accel_x = 0.0f;
+    event.data.motion.accel_y = 0.0f;
+    event.data.motion.accel_z = 1.0f;
+    event.data.motion.gyro_x = 0.0f;
+    event.data.motion.gyro_y = 0.0f;
+    event.data.motion.gyro_z = 0.0f;
+    event.data.motion.direction = 0;
+    g_event_bus.publish(event);
+
+    EXPECT_FLOAT_EQ(app.get_motion_intensity(), 0.75f);
+}
+
+TEST(HomeAppTest, TouchAndMotionSubscriptionsCleanedUpOnDestroy) {
+    {
+        HomeApp app;
+    }
+
+    Event touch_event;
+    touch_event.type = EventType::TOUCH_EVENT;
+    touch_event.data.touch = {1, 2, 3, 4};
+    g_event_bus.publish(touch_event);
+
+    Event motion_event;
+    motion_event.type = EventType::MOTION_EVENT;
+    motion_event.data.motion = {0, 0, 0, 0, 0, 0, 0, 0};
+    g_event_bus.publish(motion_event);
+}

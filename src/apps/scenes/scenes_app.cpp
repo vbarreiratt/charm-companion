@@ -11,10 +11,14 @@
 
 ScenesApp::ScenesApp() : current_scene(nullptr), current_scene_index(0) {
     subscribe_to(EventType::MOOD_CHANGED);
+    subscribe_to(EventType::TOUCH_EVENT);
+    subscribe_to(EventType::MOTION_EVENT);
 }
 
 ScenesApp::~ScenesApp() {
     unsubscribe_from(EventType::MOOD_CHANGED);
+    unsubscribe_from(EventType::TOUCH_EVENT);
+    unsubscribe_from(EventType::MOTION_EVENT);
     if (current_scene) {
         current_scene->on_exit();
         delete current_scene;

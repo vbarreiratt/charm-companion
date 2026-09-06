@@ -19,10 +19,12 @@ public:
     // Test accessors
     uint32_t get_frame_counter() const { return frame_counter; }
     float get_motion_intensity() const { return motion_intensity; }
+    int get_touch_count() const { return touch_count; }
 
 protected:
     uint32_t frame_counter = 0;
     float motion_intensity = 0.0f;
+    int touch_count = 0;
     HomeUI ui;
 };
 
