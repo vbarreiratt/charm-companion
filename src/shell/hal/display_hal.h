@@ -4,21 +4,30 @@
 
 #include <cstdint>
 
+#if defined(ARDUINO)
+class Arduino_DataBus;
+class Arduino_CO5300;
+#endif
+
 class DisplayHAL {
 public:
     static DisplayHAL& instance();
 
     bool init();
-    void flush(uint8_t* frame_buffer);  // 434KB PSRAM buffer
+    void flush(uint8_t* frame_buffer);  // 434KB PSRAM buffer, RGB565
     void set_brightness(uint8_t percent);  // 0-100
 
 private:
     DisplayHAL() = default;
-    ~DisplayHAL() = default;
+    ~DisplayHAL() = default;  // process-lifetime singleton; no cleanup on embedded target
 
-    // Prevent copy/move
     DisplayHAL(const DisplayHAL&) = delete;
     DisplayHAL& operator=(const DisplayHAL&) = delete;
+
+#if defined(ARDUINO)
+    Arduino_DataBus* bus_ = nullptr;
+    Arduino_CO5300* panel_ = nullptr;
+#endif
 };
 
 #endif
