@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Charm Companion Digital Twin</title>
+<style>
+  body { margin: 0; background: #111; display: flex; flex-direction: column;
+         align-items: center; font-family: sans-serif; color: #eee; padding-top: 12px; }
+  button { margin: 0 4px; padding: 6px 12px; }
+  canvas { border-radius: 50%; border: 2px solid #333; margin-top: 12px; cursor: pointer; }
+</style>
+</head>
+<body>
+  <div>
+    <button onclick="selectTarget('home')">home</button>
+    <button onclick="selectTarget('planet')">planet</button>
+    <button onclick="selectTarget('eye')">eye</button>
+  </div>
+  <canvas id="screen" width="466" height="466"></canvas>
+  <script src="dist/twin.js"></script>
+  <script>
+    let twinTouch, twinTick, twinSelect, twinBuffer, twinWidth, twinHeight;
+    const canvas = document.getElementById('screen');
+    const ctx2d = canvas.getContext('2d');
+    let lastTime = performance.now();
+
+    function frame(now) {
+      const dt = Math.min(now - lastTime, 100);
+      lastTime = now;
+      twinTick(Math.round(dt));
+
+      const ptr = twinBuffer();
+      const w = twinWidth();
+      const h = twinHeight();
+      const words = new Uint16Array(Module.HEAPU16.buffer, ptr, w * h);
+      const img = ctx2d.createImageData(w, h);
+      for (let i = 0; i < w * h; i++) {
+        const v = words[i];
+        const r5 = (v >> 11) & 0x1f;
+        const g6 = (v >> 5) & 0x3f;
+        const b5 = v & 0x1f;
+        const o = i * 4;
+        img.data[o] = Math.round((r5 * 255) / 31);
+        img.data[o + 1] = Math.round((g6 * 255) / 63);
+        img.data[o + 2] = Math.round((b5 * 255) / 31);
+        img.data[o + 3] = 255;
+      }
+      ctx2d.putImageData(img, 0, 0);
+      requestAnimationFrame(frame);
+    }
+
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.round((e.clientX - rect.left) * (canvas.width / rect.width));
+      const y = Math.round((e.clientY - rect.top) * (canvas.height / rect.height));
+      twinTouch(x, y);
+    });
+
+    function selectTarget(name) { twinSelect(name); }
+
+    Module.onRuntimeInitialized = () => {
+      twinTouch = Module.cwrap('twin_touch', null, ['number', 'number']);
+      twinTick = Module.cwrap('twin_tick', null, ['number']);
+      twinSelect = Module.cwrap('twin_select', null, ['string']);
+      twinBuffer = Module.cwrap('twin_buffer', 'number', []);
+      twinWidth = Module.cwrap('twin_width', 'number', []);
+      twinHeight = Module.cwrap('twin_height', 'number', []);
+      requestAnimationFrame(frame);
+    };
+  </script>
+</body>
+</html>
