@@ -8,7 +8,8 @@
 // 2026-09-06-hardware-iteration-harness-design.md.
 //
 // Usage:
-//   render_reference <home|planet|eye> --out <path.raw> [--touch] [--update-ms N]
+//   render_reference <home|planet|eye> --out <path.raw> [--touch]
+//                     [--touch-x N] [--touch-y N] [--update-ms N]
 
 #include "apps/home/home_app.h"
 #include "apps/scenes/planet_scene.h"
@@ -37,7 +38,8 @@ void write_buffer(const char* path, Canvas& canvas) {
 
 int main(int argc, char** argv) {
     if (argc < 2) {
-        fprintf(stderr, "usage: render_reference <home|planet|eye> --out <path> [--touch] [--update-ms N]\n");
+        fprintf(stderr, "usage: render_reference <home|planet|eye> --out <path> [--touch]"
+                        " [--touch-x N] [--touch-y N] [--update-ms N]\n");
         return 1;
     }
 
@@ -45,12 +47,18 @@ int main(int argc, char** argv) {
     const char* out_path = nullptr;
     bool touch = false;
     uint32_t update_ms = 0;
+    uint16_t touch_x = 0;
+    uint16_t touch_y = 0;
 
     for (int i = 2; i < argc; ++i) {
         if (strcmp(argv[i], "--out") == 0 && i + 1 < argc) {
             out_path = argv[++i];
         } else if (strcmp(argv[i], "--touch") == 0) {
             touch = true;
+        } else if (strcmp(argv[i], "--touch-x") == 0 && i + 1 < argc) {
+            touch_x = static_cast<uint16_t>(atoi(argv[++i]));
+        } else if (strcmp(argv[i], "--touch-y") == 0 && i + 1 < argc) {
+            touch_y = static_cast<uint16_t>(atoi(argv[++i]));
         } else if (strcmp(argv[i], "--update-ms") == 0 && i + 1 < argc) {
             update_ms = static_cast<uint32_t>(atoi(argv[++i]));
         } else {
@@ -65,7 +73,10 @@ int main(int argc, char** argv) {
     }
 
     Canvas canvas(DISPLAY_WIDTH, DISPLAY_HEIGHT);
-    TouchEvent te{0, 0, 0, 0};
+    TouchEvent te{touch_x, touch_y, 0, 0};
+    if (touch) {
+        fprintf(stderr, "render_reference: touch x=%u y=%u\n", touch_x, touch_y);
+    }
 
     if (strcmp(target, "home") == 0) {
         HomeApp app;
