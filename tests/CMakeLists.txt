@@ -122,3 +122,15 @@ add_executable(test_personality_nvs
 target_link_libraries(test_personality_nvs gtest gtest_main)
 gtest_discover_tests(test_personality_nvs)
 
+add_executable(test_planet_scene
+    test_planet_scene.cpp
+    ../src/shell/event_bus.cpp
+    ../src/spicy/spicy.cpp
+    ../src/spicy/personality_api.cpp
+    ../src/spicy/personality_nvs.cpp
+    ../src/apps/scenes/planet_scene.cpp
+    ../src/utils/canvas_wrapper.cpp
+)
+target_link_libraries(test_planet_scene gtest gtest_main)
+gtest_discover_tests(test_planet_scene)
+

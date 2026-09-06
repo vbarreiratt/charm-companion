@@ -1,5 +1,6 @@
 #include "apps/scenes/planet_scene.h"
 #include "spicy/personality_api.h"
+#include "utils/color_utils.h"
 #include <cmath>
 
 #if defined(ARDUINO)
@@ -49,8 +50,8 @@ void PlanetScene::update(uint32_t dt) {
 }
 
 void PlanetScene::render(Canvas* canvas, const PersonalityContext& ctx) {
-    // Clear background
-    // TODO: canvas->fillScreen(ctx.theme.bg_color);
+    if (!canvas) return;
+    canvas->fill_screen(ctx.theme.bg_color);
     int cx = 233;
     int cy = 233;
     int radius = 80;
@@ -60,14 +61,17 @@ void PlanetScene::render(Canvas* canvas, const PersonalityContext& ctx) {
 
 void PlanetScene::draw_planet(Canvas* canvas, int cx, int cy, int radius,
                              uint16_t color, float rotation, float glow) {
-    (void)canvas;
-    (void)cx;
-    (void)cy;
-    (void)radius;
-    (void)color;
-#if defined(ARDUINO)
-    Serial.printf("Drawing planet (rotation=%f, glow=%f)\n", rotation, glow);
-#else
-    printf("Drawing planet (rotation=%f, glow=%f)\n", rotation, glow);
-#endif
+    if (!canvas) return;
+
+    // Glow halo: a dimmer, larger ring behind the planet body, sized by happiness.
+    int16_t glow_radius = static_cast<int16_t>(radius) + static_cast<int16_t>(glow * 20.0f);
+    canvas->fill_circle(cx, cy, glow_radius, COLOR_MONO_DIM);
+
+    canvas->fill_circle(cx, cy, radius, color);
+
+    // Rotation band: a diameter line across the planet's face, rotated to show spin.
+    float rad = rotation * 3.14159265f / 180.0f;
+    int16_t dx = static_cast<int16_t>(radius * cosf(rad));
+    int16_t dy = static_cast<int16_t>(radius * sinf(rad));
+    canvas->draw_line(cx - dx, cy - dy, cx + dx, cy + dy, COLOR_BG_BLACK);
 }
