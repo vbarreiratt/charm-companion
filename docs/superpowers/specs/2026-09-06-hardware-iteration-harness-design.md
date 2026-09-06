@@ -1,8 +1,9 @@
 # Hardware Iteration Harness: Design
 
 **Date:** 2026-09-06
-**Status:** Design Phase
+**Status:** Implemented (2026-09-06) — see "As-Built Notes" below
 **Depends on:** 2026-09-05-charm-companion-architecture.md (Shell/EventBus/Canvas), Phase 1 hardware completion plans
+**Plans:** docs/superpowers/plans/2026-09-06-hardware-iteration-harness.md, docs/superpowers/plans/2026-09-06-wasm-digital-twin.md (both complete, both finally reviewed)
 
 ---
 
@@ -129,8 +130,24 @@ This design bundles two separable capabilities. Recommend two implementation pla
 
 Building 1 before 2 means the touch-navigation feature doesn't have to wait on an unfamiliar toolchain (Emscripten) landing successfully.
 
-## Open implementation dependencies
+## Open implementation dependencies (resolved — see As-Built Notes)
 
 - Emscripten toolchain (`emcc`) is not installed on this machine; installing it is part of the implementation plan, not this design.
 - `render_reference`'s exact CLI shape (how a scene/app + an input state like "mid-blink at 75ms" is specified) is left to the implementation plan.
 - Where exactly `webtwin`'s browser shim lives (a plain local HTML file opened directly, or served) is an implementation detail, not a design constraint — either works since no capability beyond `<canvas>` + mouse events is needed.
+
+---
+
+## As-Built Notes (2026-09-06)
+
+Both plans executed via subagent-driven-development, each task individually reviewed, each plan finally reviewed with one fix wave. Final state: `tools/hw/` (serial_console.py, render_reference.{cpp,py}, camera_probe.py, webtwin/), `docs/hardware/camera-quirks.md`, `.claude/skills/hardware-iterate/SKILL.md`. All pushed to `origin/main`.
+
+Where reality diverged from this design, or from the plans' first-draft assumptions:
+
+- **`emcc` → `em++`.** The production source uses `std::mutex`/exception-safe `new[]`; Emscripten's C++ driver was required, not its C-oriented one.
+- **`render_reference.cpp`'s `--touch` gained `--touch-x`/`--touch-y`** (default 0, backward-compatible) after the harness's final review flagged that the spec's own first planned mission (coordinate-dependent touch navigation) would need them — added before that mission started rather than mid-mission.
+- **`serial_console.connect()` gained port auto-discovery**: if the exact default port isn't present, it globs `/dev/cu.usbmodem*` — macOS renumbers this across reconnects, which the original design didn't account for.
+- **`render_reference.py`'s build-cache staleness check** originally only tracked `.cpp` mtimes; a header-only change (e.g. tuning `EyeScene::blink_duration`) could silently serve a stale reference. Fixed to also track headers under `src/`/`config/` for staleness, without adding them to the compile command.
+- **The visual-refinement loop's "open `shell.html` via `file://`, no server needed" claim was wrong** — Chrome blocks the WASM binary's `fetch` from a `file://`-origin page. `SKILL.md` documents `python3 -m http.server` from `tools/hw/webtwin/` instead.
+- **The digital twin matches pixels for a given state, not animation timing.** `HomeUI`'s breathing-pulse animation is frame-count-driven (`frame_counter % 60`), not wall-clock-driven; the twin's ~16ms `requestAnimationFrame` cadence and the real board's ~57-67ms display-flush cadence (see `display_hal.cpp`) reach the same frame count at different wall-clock times. `SKILL.md` now flags this as a `home`-specific caveat.
+- **Not yet done:** the dogfooding mission this whole harness was built to unblock — touch-based navigation between Home and Scenes — has not been implemented yet. It's the next piece of work, not part of this spec's scope.

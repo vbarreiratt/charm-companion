@@ -1,6 +1,6 @@
 # Hardware Iteration Harness Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Replace the ad-hoc Python scripts written during the 2026-09-06 session with reusable tools — a persistent serial console, a same-source-as-firmware reference renderer, and a synchronized touch+camera capture tool — plus a project Skill that ties them into a repeatable build→flash→simulate→observe→compare loop.
 
@@ -52,7 +52,7 @@ docs/hardware/
 - Produces: `SerialConsole(serial_obj, read_timeout=0.05)` with methods `.send(command, settle=0.3) -> list[str]`, `.tail(seconds) -> list[str]`, `.close()`, and context-manager support. Also `connect(port="/dev/cu.usbmodem21201", baud=115200) -> SerialConsole` for real hardware use.
 - Consumes: nothing from earlier tasks (this is the first task).
 
-- [ ] **Step 1: Create `tools/hw/requirements.txt`**
+- [x] **Step 1: Create `tools/hw/requirements.txt`**
 
 ```
 pyserial
@@ -62,7 +62,7 @@ Pillow
 pytest
 ```
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 Create `tools/hw/test_serial_console.py`:
 
@@ -100,12 +100,12 @@ def test_context_manager_closes_underlying_serial():
     assert not ser.is_open
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd tools/hw && python3 -m pytest test_serial_console.py -v`
 Expected: FAIL with `ModuleNotFoundError: No module named 'serial_console'` (the module doesn't exist yet).
 
-- [ ] **Step 3: Implement `tools/hw/serial_console.py`**
+- [x] **Step 3: Implement `tools/hw/serial_console.py`**
 
 ```python
 """Persistent serial connection to the ESP32-S3's debug command console
@@ -158,12 +158,12 @@ def connect(port="/dev/cu.usbmodem21201", baud=115200):
     return SerialConsole(ser)
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd tools/hw && python3 -m pytest test_serial_console.py -v`
 Expected: 3 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tools/hw/requirements.txt tools/hw/serial_console.py tools/hw/test_serial_console.py
@@ -186,7 +186,7 @@ Claude-Session: https://claude.ai/code/session_01KK4vBa8VgAcevptQhV87Fr"
 - Consumes: nothing from Task 1.
 - Produces: `render_reference.render(target: str, out_png: str, touch=False, update_ms=0, force_build=False) -> str` (returns `out_png`), used by later tasks and by future missions to generate the "expected" reference image. `target` is one of `"home"`, `"planet"`, `"eye"`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `tools/hw/test_render_reference.py`:
 
@@ -231,12 +231,12 @@ def test_home_sclera_matches_mono_neutral_rgb565_conversion(tmp_path):
     assert img.getpixel((170, 155)) == (230, 231, 230)
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd tools/hw && python3 -m pytest test_render_reference.py -v`
 Expected: FAIL with `ModuleNotFoundError: No module named 'render_reference'`.
 
-- [ ] **Step 3: Implement `tools/hw/render_reference.cpp`**
+- [x] **Step 3: Implement `tools/hw/render_reference.cpp`**
 
 ```cpp
 // tools/hw/render_reference.cpp
@@ -353,7 +353,7 @@ int main(int argc, char** argv) {
 }
 ```
 
-- [ ] **Step 4: Implement `tools/hw/render_reference.py`**
+- [x] **Step 4: Implement `tools/hw/render_reference.py`**
 
 ```python
 #!/usr/bin/env python3
@@ -444,12 +444,12 @@ if __name__ == "__main__":
     sys.exit(main())
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `cd tools/hw && python3 -m pytest test_render_reference.py -v`
 Expected: 3 passed. (First run compiles `render_reference_bin`, which takes a few seconds; later runs are cached by mtime.)
 
-- [ ] **Step 6: Add the compiled binary to `.gitignore`**
+- [x] **Step 6: Add the compiled binary to `.gitignore`**
 
 Append to the repo's `.gitignore` (create it if it doesn't exist at the repo root, checking first with `cat .gitignore` — if one exists, append rather than overwrite):
 
@@ -458,7 +458,7 @@ tools/hw/render_reference_bin
 tools/hw/webtwin/dist/
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add tools/hw/render_reference.cpp tools/hw/render_reference.py tools/hw/test_render_reference.py .gitignore
@@ -480,7 +480,7 @@ Claude-Session: https://claude.ai/code/session_01KK4vBa8VgAcevptQhV87Fr"
 - Consumes: `SerialConsole` from Task 1 (specifically its `._ser` attribute, to write directly without waiting on `tail()`'s settle delay before starting the capture burst).
 - Produces: `capture_schedule(duration_s, interval_s) -> list[float]`, `frame_filename(out_dir, index, t) -> str`, `open_camera(device_index=0)`, `run_touch_capture(console, cam, command, out_dir, duration_s=1.5, interval_s=0.03) -> list[str]` (paths of saved frames), used by future missions and by Task 5's end-to-end smoke test.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `tools/hw/test_camera_probe.py`:
 
@@ -500,12 +500,12 @@ def test_frame_filename_encodes_index_and_timestamp():
     assert path == "/tmp/out/frame_003_t0.075.png"
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd tools/hw && python3 -m pytest test_camera_probe.py -v`
 Expected: FAIL with `ModuleNotFoundError: No module named 'camera_probe'`.
 
-- [ ] **Step 3: Implement `tools/hw/camera_probe.py`**
+- [x] **Step 3: Implement `tools/hw/camera_probe.py`**
 
 ```python
 """Synchronized touch-injection + camera burst capture.
@@ -573,12 +573,12 @@ def run_touch_capture(console, cam, command, out_dir, duration_s=1.5, interval_s
     return paths
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd tools/hw && python3 -m pytest test_camera_probe.py -v`
 Expected: 2 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tools/hw/camera_probe.py tools/hw/test_camera_probe.py
@@ -599,7 +599,7 @@ Claude-Session: https://claude.ai/code/session_01KK4vBa8VgAcevptQhV87Fr"
 - Consumes: nothing.
 - Produces: a document referenced by `camera_probe.py`'s docstring (Task 3) and by `SKILL.md` (Task 5) as the thing to check before calling a visual mismatch a code bug.
 
-- [ ] **Step 1: Write `docs/hardware/camera-quirks.md`**
+- [x] **Step 1: Write `docs/hardware/camera-quirks.md`**
 
 ```markdown
 # Camera Quirks — Not Code Bugs
@@ -635,7 +635,7 @@ how to tell it apart from a real bug, so the next session doesn't
 re-diagnose it from scratch.
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add docs/hardware/camera-quirks.md
@@ -656,7 +656,7 @@ Claude-Session: https://claude.ai/code/session_01KK4vBa8VgAcevptQhV87Fr"
 - Consumes: `tools/hw/serial_console.py`, `tools/hw/render_reference.py`, `tools/hw/camera_probe.py` (Tasks 1-3), `docs/hardware/camera-quirks.md` (Task 4).
 - Produces: the invokable skill itself. (Plan 2, the WASM digital twin, will extend this file with a visual-refinement pre-hardware loop section — noted inline below so that extension point is explicit, not a placeholder for missing content.)
 
-- [ ] **Step 1: Write `.claude/skills/hardware-iterate/SKILL.md`**
+- [x] **Step 1: Write `.claude/skills/hardware-iterate/SKILL.md`**
 
 ```markdown
 ---
@@ -726,7 +726,7 @@ described in `docs/superpowers/specs/2026-09-06-hardware-iteration-harness-desig
 to add a proper pre-hardware co-iteration loop here in a follow-up plan.)*
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add .claude/skills/hardware-iterate/SKILL.md
@@ -747,12 +747,12 @@ Claude-Session: https://claude.ai/code/session_01KK4vBa8VgAcevptQhV87Fr"
 - Consumes: everything from Tasks 1-5.
 - Produces: a recorded pass/fail result for the harness as a whole (this is the plan's actual "does it work" gate — the earlier tasks' automated tests each cover one piece in isolation, but none of them touch real hardware together).
 
-- [ ] **Step 1: Confirm the board is flashed with the current firmware**
+- [x] **Step 1: Confirm the board is flashed with the current firmware**
 
 Run: `pio run -e waveshare-amoled-175c -t upload --upload-port /dev/cu.usbmodem21201`
 Expected: `SUCCESS`. (The debug console in `src/main.cpp` was already added and flashed on 2026-09-06; this just re-confirms it's current.)
 
-- [ ] **Step 2: Generate the reference image for the touched, fully-blinked eye**
+- [x] **Step 2: Generate the reference image for the touched, fully-blinked eye**
 
 Run:
 ```bash
@@ -760,7 +760,7 @@ python3 tools/hw/render_reference.py eye --touch --update-ms 160 --out /tmp/ref_
 ```
 Expected: prints `wrote /tmp/ref_eye_blink.png`. Read the file to confirm it shows a closed eyelid bar (matches `EyeSceneTest.BlinkFullyClosesEyelid`).
 
-- [ ] **Step 3: Run the synchronized capture against the real board**
+- [x] **Step 3: Run the synchronized capture against the real board**
 
 This is a manual verification run, not a new committed tool — run it as a one-off script from `tools/hw/` (so `serial_console`/`camera_probe` import directly):
 
@@ -792,12 +792,12 @@ for p in paths:
 
 Expected: at least one saved frame's timestamp falls within the ~150ms blink window (i.e. some path's `t` is between roughly 0.0 and 0.2).
 
-- [ ] **Step 4: Visually compare a burst frame near the blink window to the reference PNG**
+- [x] **Step 4: Visually compare a burst frame near the blink window to the reference PNG**
 
 Read (view) the frame closest to `t≈0.075` from Step 3's output alongside `/tmp/ref_eye_blink.png` from Step 2. Confirm they show the same shape (closed/near-closed eyelid), accounting for anything listed in `docs/hardware/camera-quirks.md`.
 
 Expected outcome: a real match, OR a documented mismatch that is either (a) added to `camera-quirks.md` if it's a new camera-only artifact, or (b) a real bug to fix before this task can be considered done (in which case, fix it and re-run from Step 1).
 
-- [ ] **Step 5: Record the result**
+- [x] **Step 5: Record the result**
 
 No code change from this task alone (unless Step 4 found a real bug). If everything matched, note it in the next commit message or handoff; there is nothing to commit for this task by itself.

@@ -1,6 +1,6 @@
 # WASM Digital Twin Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Compile the same production `Canvas`/`App`/`Scene`/`EventBus` C++ source (not a reimplementation) to WebAssembly, driving a browser `<canvas>` the user can watch update live and click on — replacing the failed 2026-09-04 esp32-badge approach (a hand-ported TypeScript UI that drifted from the C++ firmware) with a twin that cannot drift, because it's the same binary source compiled to a second target.
 
@@ -39,17 +39,17 @@ tools/hw/webtwin/
 
 **Interfaces:** produces a working `emcc` on `PATH` for Task 2 onward.
 
-- [ ] **Step 1: Install via Homebrew**
+- [x] **Step 1: Install via Homebrew**
 
 Run: `brew install emscripten`
 Expected: completes successfully (it's a bottled formula — confirmed available via `brew info emscripten` on 2026-09-06).
 
-- [ ] **Step 2: Verify the compiler runs**
+- [x] **Step 2: Verify the compiler runs**
 
 Run: `emcc --version`
 Expected: prints an `emcc (Emscripten gcc/clang-like replacement)` version line.
 
-- [ ] **Step 3: Compile and run a trivial smoke program**
+- [x] **Step 3: Compile and run a trivial smoke program**
 
 ```bash
 cat > /tmp/twin_smoke.cpp << 'EOF'
@@ -61,7 +61,7 @@ node /tmp/twin_smoke.js
 ```
 Expected: prints `emscripten ok`. (This confirms both the C++→WASM compile step and that the generated JS runs standalone under `node`, before we add any of our own code.)
 
-- [ ] **Step 4: No commit for this task** (nothing in the repo changed — this only verifies the local toolchain).
+- [x] **Step 4: No commit for this task** (nothing in the repo changed — this only verifies the local toolchain).
 
 ---
 
@@ -75,7 +75,7 @@ Expected: prints `emscripten ok`. (This confirms both the C++→WASM compile ste
 - Consumes: `HomeApp`, `PlanetScene`, `EyeScene` (`src/apps/...`), `g_personality_api` (`src/spicy/personality_api.h`), `Canvas` (`src/utils/canvas_wrapper.h`), `DISPLAY_WIDTH`/`DISPLAY_HEIGHT` (`config/pin_config.h`) — all existing, unchanged.
 - Produces (as `extern "C"` functions, called from JS in Task 3): `twin_select(const char* name)`, `twin_touch(uint16_t x, uint16_t y)`, `twin_tick(uint32_t dt_ms)`, `twin_buffer() -> uint16_t*`, `twin_buffer_size() -> int`, `twin_width() -> int`, `twin_height() -> int`.
 
-- [ ] **Step 1: Write `tools/hw/webtwin/twin_main.cpp`**
+- [x] **Step 1: Write `tools/hw/webtwin/twin_main.cpp`**
 
 ```cpp
 // tools/hw/webtwin/twin_main.cpp
@@ -195,7 +195,7 @@ int main() {
 }
 ```
 
-- [ ] **Step 2: Write `tools/hw/webtwin/build.sh`**
+- [x] **Step 2: Write `tools/hw/webtwin/build.sh`**
 
 ```bash
 #!/bin/bash
@@ -225,12 +225,12 @@ echo "built dist/twin.js + dist/twin.wasm"
 chmod +x tools/hw/webtwin/build.sh
 ```
 
-- [ ] **Step 3: Run the build**
+- [x] **Step 3: Run the build**
 
 Run: `tools/hw/webtwin/build.sh`
 Expected: `built dist/twin.js + dist/twin.wasm`, and both files exist under `tools/hw/webtwin/dist/`.
 
-- [ ] **Step 4: Smoke-test the compiled module under `node`, without a browser yet**
+- [x] **Step 4: Smoke-test the compiled module under `node`, without a browser yet**
 
 ```bash
 cd tools/hw/webtwin
@@ -254,7 +254,7 @@ Module.onRuntimeInitialized = () => {
 ```
 Expected: prints `pupil value: 0` then `OK`. If `Module.HEAPU16` is undefined, add `"HEAPU16"` to `EXPORTED_RUNTIME_METHODS` in `build.sh` and rebuild (Step 3) before retrying — this is exactly the kind of thing to fix at this step rather than guess about upfront, since it depends on the exact Emscripten version installed in Task 1.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tools/hw/webtwin/twin_main.cpp tools/hw/webtwin/build.sh
@@ -275,7 +275,7 @@ Claude-Session: https://claude.ai/code/session_01KK4vBa8VgAcevptQhV87Fr"
 - Consumes: `dist/twin.js`/`dist/twin.wasm` (Task 2).
 - Produces: a page a human opens directly (`file://.../shell.html`) or via `python3 -m http.server` from `tools/hw/webtwin/`.
 
-- [ ] **Step 1: Write `tools/hw/webtwin/shell.html`**
+- [x] **Step 1: Write `tools/hw/webtwin/shell.html`**
 
 ```html
 <!doctype html>
@@ -352,7 +352,7 @@ Claude-Session: https://claude.ai/code/session_01KK4vBa8VgAcevptQhV87Fr"
 </html>
 ```
 
-- [ ] **Step 2: Automated smoke test via headless Chrome**
+- [x] **Step 2: Automated smoke test via headless Chrome**
 
 ```bash
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
@@ -366,7 +366,7 @@ Then read `/tmp/webtwin_smoke.png`.
 
 Expected: the canvas shows a circular eye (white sclera, colored iris, black pupil) — not a blank/black square. If it's blank, re-run with `--enable-logging=stderr --v=1` added and check for a JS error (most likely cause: an `EXPORTED_FUNCTIONS`/`cwrap` name mismatch from Task 2 — fix `build.sh`, rebuild, and retry this step).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tools/hw/webtwin/shell.html
@@ -384,7 +384,7 @@ Claude-Session: https://claude.ai/code/session_01KK4vBa8VgAcevptQhV87Fr"
 
 **Interfaces:** consumes everything from Tasks 2-3; produces a recorded pass/fail for the twin's core interactive loop (click triggers the same `on_touch()` behavior a physical/simulated touch does).
 
-- [ ] **Step 1: Screenshot immediately after a simulated click**
+- [x] **Step 1: Screenshot immediately after a simulated click**
 
 Headless Chrome can't easily simulate a mid-page click via the `--screenshot` CLI flag alone, so drive it with a tiny Node script using Chrome's remote debugging protocol is more than this needs — instead, verify the same code path `twin_touch` exercises directly, the way Task 2 Step 4 already did under `node`, but through the full blink timeline:
 
@@ -419,7 +419,7 @@ Module.onRuntimeInitialized = () => {
 ```
 Expected: `open iris value:` and `closed eyelid value:` differ, and the script prints `OK`. This confirms `twin_touch` reaches the exact same `EyeScene::on_touch`/blink state machine already covered by `tests/test_eye_scene.cpp` — the WASM build didn't silently change behavior.
 
-- [ ] **Step 2: No commit for this task** (verification only; nothing changed unless Step 1 failed and required a fix in Task 2/3's files, in which case amend those commits' follow-up with a new commit there instead).
+- [x] **Step 2: No commit for this task** (verification only; nothing changed unless Step 1 failed and required a fix in Task 2/3's files, in which case amend those commits' follow-up with a new commit there instead).
 
 ---
 
@@ -432,7 +432,7 @@ Expected: `open iris value:` and `closed eyelid value:` differ, and the script p
 - Consumes: `tools/hw/webtwin/shell.html`, `tools/hw/webtwin/build.sh` (Tasks 2-3).
 - Produces: the completed skill, now covering both loops described in the spec.
 
-- [ ] **Step 1: Replace the "Visual-refinement missions" section**
+- [x] **Step 1: Replace the "Visual-refinement missions" section**
 
 Find this block in `.claude/skills/hardware-iterate/SKILL.md`:
 
@@ -471,7 +471,7 @@ the digital twin *before* touching hardware:
    proceed there, diffing the real board's camera capture against it.
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add .claude/skills/hardware-iterate/SKILL.md
