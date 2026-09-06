@@ -54,6 +54,15 @@ TEST(CanvasTest, DrawCircleSetsEdgePixelsOnly) {
     EXPECT_EQ(c.get_pixel(10, 10), 0);       // center not filled
 }
 
+TEST(CanvasTest, DrawCircleOctantPointsCorrect) {
+    Canvas c(21, 21);
+    c.draw_circle(10, 10, 5, 0xFFFF);
+    // Verify octant points from hand-traced Midpoint Circle algorithm
+    // For r=5: sequence is (5,0),(5,1),(5,2),(4,3)
+    EXPECT_EQ(c.get_pixel(14, 13), 0xFFFF);  // (cx+4, cy+3) - catches algorithm bug
+    EXPECT_EQ(c.get_pixel(15, 11), 0xFFFF);  // (cx+5, cy+1) - another verified point
+}
+
 TEST(CanvasTest, FillRectSetsBoundedRegion) {
     Canvas c(10, 10);
     c.fill_rect(2, 2, 3, 3, 0xABCD);

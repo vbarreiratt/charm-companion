@@ -52,7 +52,7 @@ void Canvas::fill_circle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
 void Canvas::draw_circle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
     int16_t x = r;
     int16_t y = 0;
-    int16_t err = 0;
+    int16_t err = 1 - r;
     while (x >= y) {
         draw_pixel(cx + x, cy + y, color);
         draw_pixel(cx + y, cy + x, color);
@@ -63,12 +63,11 @@ void Canvas::draw_circle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
         draw_pixel(cx + y, cy - x, color);
         draw_pixel(cx + x, cy - y, color);
         y += 1;
-        if (err <= 0) {
+        if (err < 0) {
             err += 2 * y + 1;
-        }
-        if (err > 0) {
+        } else {
             x -= 1;
-            err -= 2 * x + 1;
+            err += 2 * (y - x) + 1;
         }
     }
 }
